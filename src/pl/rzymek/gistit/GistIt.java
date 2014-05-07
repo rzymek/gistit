@@ -2,8 +2,10 @@ package pl.rzymek.gistit;
 
 import java.io.IOException;
 
+import retrofit.ErrorHandler;
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
+import retrofit.RetrofitError;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerFuture;
@@ -18,6 +20,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class GistIt extends ActionBarActivity {
 
@@ -29,35 +32,43 @@ public class GistIt extends ActionBarActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_gist_it);
 		newText = (TextView) findViewById(R.id.newText);
+
+		RestAdapter restAdapter = new RestAdapter.Builder().setEndpoint("https://api.github.com").setRequestInterceptor(new RequestInterceptor() {
+			@Override
+			public void intercept(RequestFacade request) {
+				Log.w("header", "" + token);
+				request.addHeader("Authorization", "token " + token);
+			}
+		}).setErrorHandler(new ErrorHandler() {
+			@Override
+			public Throwable handleError(RetrofitError error) {
+				Log.e("RETROFIT", error+"\n"+error.getCause());
+				return error.getCause();
+			}
+		})
+
+		.build();
+		github = restAdapter.create(GitHubService.class);
+		getGithubAuthToken();
+
 		if (savedInstanceState == null) {
 			Intent intent = getIntent();
 			if (intent != null) {
 				if (Intent.ACTION_SEND.equals(intent.getAction())) {
 					String message = defaultString(intent.getStringExtra(Intent.EXTRA_TEXT), "");
 					String subject = defaultString(intent.getStringExtra(Intent.EXTRA_SUBJECT), "");
-					String msg = TextUtils.isEmpty(subject) ? message 
-							: "["+subject + "](" + message + ")";					
+					String msg = TextUtils.isEmpty(subject) ? message : "[" + subject + "](" + message + ")";
+					updateGistTask.execute(msg);
 					newText.setText(msg);
 				}
 			}
 		}
-		RestAdapter restAdapter = new RestAdapter.Builder().setEndpoint("https://api.github.com").setRequestInterceptor(new RequestInterceptor() {
-			@Override
-			public void intercept(RequestFacade request) {
-				Log.w("header", token);
-				request.addHeader("Authorization", "token " + token);
-			}
-		}).build();
-		github = restAdapter.create(GitHubService.class);
-
-		getGithubAuthToken();
 	}
 
 	private String token;
 
 	private void getGithubAuthToken() {
 		new AsyncTask<Void, Void, String>() {
-
 			@Override
 			protected String doInBackground(Void... params) {
 				Log.w("TOKEN", "github login");
@@ -113,22 +124,24 @@ public class GistIt extends ActionBarActivity {
 	}
 
 	private void sendGist() {
-		new AsyncTask<String, Void, String>() {
-			@Override
-			protected String doInBackground(String... params) {
-				// String newText = params[0];
-				String id = "4299973c43fa6964bce1";
-				Gist gist = github.getGist(id);
-				gist.getDefaultFile().content += "  \n" +
-						newText.getText();
-				github.update(id, gist);
-				return "";
-			}
-		
-			protected void onPostExecute(String result) {
-				finish();
-			};
-		}.execute("");
+		updateGistTask.execute(newText.getText().toString());
 	}
+
+	private AsyncTask<String, Void, String> updateGistTask = new AsyncTask<String, Void, String>() {
+		@Override
+		protected String doInBackground(String... params) {
+			// String newText = params[0];
+			String id = "4299973c43fa6964bce1";
+			Gist gist = github.getGist(id);
+			gist.getDefaultFile().content += "  \n" + params[0];
+			github.update(id, gist);
+			return "";
+		}
+
+		protected void onPostExecute(String result) {
+			finish();
+			Toast.makeText(GistIt.this, "Gist updated", Toast.LENGTH_SHORT).show();
+		};
+	};
 
 }
