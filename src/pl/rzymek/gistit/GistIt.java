@@ -1,7 +1,13 @@
 package pl.rzymek.gistit;
 
 import java.io.IOException;
+import java.util.Date;
 
+import retrofit.Callback;
+import retrofit.RequestInterceptor;
+import retrofit.RetrofitError;
+import retrofit.RequestInterceptor.RequestFacade;
+import retrofit.client.Response;
 import retrofit.RestAdapter;
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -11,8 +17,6 @@ import android.accounts.OperationCanceledException;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -46,18 +50,22 @@ public class GistIt extends ActionBarActivity {
 				}
 			}
 		}
-		RestAdapter restAdapter = new RestAdapter.Builder()
-			.setEndpoint("https://api.github.com")
-			.build();
+		RestAdapter restAdapter = new RestAdapter.Builder().setEndpoint("https://api.github.com").setRequestInterceptor(new RequestInterceptor() {
+			@Override
+			public void intercept(RequestFacade request) {
+				Log.w("header", token);
+				request.addHeader("Authorization", "token " + token);
+			}
+		}).build();
 		github = restAdapter.create(GitHubService.class);
 
 		getGithubAuthToken();
 	}
 
+	private String token;
+
 	private void getGithubAuthToken() {
 		new AsyncTask<Void, Void, String>() {
-
-			private String token;
 
 			@Override
 			protected String doInBackground(Void... params) {
@@ -114,7 +122,7 @@ public class GistIt extends ActionBarActivity {
 	}
 
 	private void sendGist() {
-		// readGist();
+		readGist();
 	}
 
 	private void readGist() {
@@ -122,14 +130,16 @@ public class GistIt extends ActionBarActivity {
 			@Override
 			protected String doInBackground(String... params) {
 				// String newText = params[0];
-				Gist gist = github.getGist("4299973c43fa6964bce1");
-				if (gist == null)
-					return "none";
-				return gist.getContent();
+				String id = "4299973c43fa6964bce1";
+				Gist gist = github.getGist(id);
+				gist.getDefaultFile().content += "  \n" +
+						fragment.newText.getText();
+				github.update(id, gist);
+				return "";
 			}
 
 			protected void onPostExecute(String result) {
-				fragment.newText.setText(result);
+				finish();
 			};
 		}.execute("");
 	}

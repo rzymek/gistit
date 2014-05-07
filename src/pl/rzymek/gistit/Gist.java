@@ -12,14 +12,18 @@ public class Gist {
 	}
 
 	public String getContent() {
-		if (files == null)
-			return "";
-		Collection<GistFile> values = files.values();
-		if (values.isEmpty())
-			return "";
-		GistFile file = values.iterator().next();
+		GistFile file = getDefaultFile();
 		if (file == null)
 			return "";
 		return file.content;
+	}
+
+	public GistFile getDefaultFile() {
+		if (files == null)
+			return null;
+		Collection<GistFile> values = files.values();
+		if (values.isEmpty())
+			return null;
+		return values.iterator().next();
 	}
 }
