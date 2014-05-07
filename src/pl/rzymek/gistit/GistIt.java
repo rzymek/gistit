@@ -22,8 +22,7 @@ public class GistIt extends ActionBarActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_gist_it);
 		newText = (TextView) findViewById(R.id.newText);
-		progressBar = (ProgressBar) findViewById(R.id.progressBar);
-
+		progressBar = (ProgressBar) findViewById(R.id.progressBar);		
 		if (savedInstanceState == null) {
 			Intent intent = getIntent();
 			if (intent != null) {
@@ -31,8 +30,8 @@ public class GistIt extends ActionBarActivity {
 					String message = defaultString(intent.getStringExtra(Intent.EXTRA_TEXT), "");
 					String subject = intent.getStringExtra(Intent.EXTRA_SUBJECT);
 					String msg = TextUtils.isEmpty(subject) ? message : "[" + subject + "](" + message + ")";
-					newText.setText(msg);
 					updateGistTask.execute(msg);
+					newText.setText(msg);
 				}
 			}
 		}
