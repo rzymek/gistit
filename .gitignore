@@ -1,0 +1,14 @@
+bin/:
+AndroidManifest.xml
+classes
+classes.dex
+dexedLibs
+GistIt.apk
+jarlist.cache
+res
+resources.ap_
+R.txt
+
+gen/:
+android
+pl
