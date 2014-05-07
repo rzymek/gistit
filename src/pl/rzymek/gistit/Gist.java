@@ -3,12 +3,19 @@ package pl.rzymek.gistit;
 import java.util.Collection;
 import java.util.Map;
 
+import android.text.TextUtils;
+
 public class Gist {
+	public String id;
+	public String description;
 	public Map<String, GistFile> files;
 
 	@Override
 	public String toString() {
-		return "" + files;
+		if (files == null || files.isEmpty())
+			return description;
+		else 
+			return files.keySet().iterator().next() + (TextUtils.isEmpty(description) ? "" : ": " + description);
 	}
 
 	public String getContent() {

@@ -16,12 +16,20 @@ import android.accounts.OperationCanceledException;
 import android.app.Application;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler.Callback;
+import android.os.Message;
 import android.util.Log;
 
 public class App extends Application {
 	private static final String ACCOUNT_TYPE = "com.github";
 	public GitHubService github;
 	protected String token;
+	private Callback noop = new Callback() {		
+		@Override
+		public boolean handleMessage(Message msg) {
+			return false;
+		}
+	};
 
 	@Override
 	public void onCreate() {
@@ -43,10 +51,12 @@ public class App extends Application {
 		}).setClient(client).build();
 
 		github = restAdapter.create(GitHubService.class);
-		fetchGithubAuthToken();
+		fetchGithubAuthToken(noop);
 	}
 
-	private void fetchGithubAuthToken() {
+	public void fetchGithubAuthToken(final Callback onTokenReady) {
+		if(token != null)
+			onTokenReady.handleMessage(null);
 		AccountManager service = (AccountManager) getSystemService(ACCOUNT_SERVICE);
 		Account[] accounts = service.getAccountsByType(ACCOUNT_TYPE);
 		if (accounts.length == 0) {
@@ -75,6 +85,7 @@ public class App extends Application {
 
 			protected void onPostExecute(String result) {
 				token = result;
+				onTokenReady.handleMessage(null);
 			};
 		}.execute();
 

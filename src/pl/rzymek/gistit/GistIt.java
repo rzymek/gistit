@@ -1,8 +1,10 @@
 package pl.rzymek.gistit;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.view.Menu;
@@ -14,26 +16,65 @@ import android.widget.Toast;
 
 public class GistIt extends ActionBarActivity {
 
+	private static final int PICK_GIST = 1;
 	private TextView newText;
 	private ProgressBar progressBar;
+	private String gistId;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_gist_it);
 		newText = (TextView) findViewById(R.id.newText);
-		progressBar = (ProgressBar) findViewById(R.id.progressBar);		
+		progressBar = (ProgressBar) findViewById(R.id.progressBar);
 		if (savedInstanceState == null) {
-			Intent intent = getIntent();
-			if (intent != null) {
-				if (Intent.ACTION_SEND.equals(intent.getAction())) {
-					String message = defaultString(intent.getStringExtra(Intent.EXTRA_TEXT), "");
-					String subject = intent.getStringExtra(Intent.EXTRA_SUBJECT);
-					String msg = TextUtils.isEmpty(subject) ? message : "[" + subject + "](" + message + ")";
-					updateGistTask.execute(msg);
-					newText.setText(msg);
-					return;
+
+			SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+			gistId = shared.getString("gist.id", null);
+			String msg = getSharedMessage();
+			if (gistId == null) {
+				Intent intent = new Intent(this, PickGistActivity.class);
+				if (msg != null) {
+					intent.putExtra("msg", msg);
 				}
+				startActivityForResult(intent, PICK_GIST);
+			} else {
+				maybyProcessIntent(msg);
+			}
+		}
+	}
+
+	private void maybyProcessIntent(String msg) {
+		if (msg != null) {
+			updateGistTask.execute(msg);
+			newText.setText(msg);
+		}
+	}
+
+	private String getSharedMessage() {
+		Intent intent = getIntent();
+		if (intent != null) {
+			if (Intent.ACTION_SEND.equals(intent.getAction())) {
+				String message = defaultString(intent.getStringExtra(Intent.EXTRA_TEXT), "");
+				String subject = intent.getStringExtra(Intent.EXTRA_SUBJECT);
+				String msg = TextUtils.isEmpty(subject) ? message : "[" + subject + "](" + message + ")";
+				return msg;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (resultCode != RESULT_OK) {
+			finish();
+			return;
+		}
+		if (requestCode == PICK_GIST) {
+			gistId = data.getStringExtra("gist.id");
+			if (data.hasExtra("msg")) {
+				maybyProcessIntent(data.getStringExtra("msg"));
 			}
 		}
 	}
@@ -58,8 +99,11 @@ public class GistIt extends ActionBarActivity {
 		if (id == R.id.action_send) {
 			updateGistTask.execute(newText.getText().toString());
 			return true;
-		}else if(id == R.id.action_cancel) {
+		} else if (id == R.id.action_cancel) {
 			finish();
+			return true;
+		}else if(id == R.id.action_select_gist){
+			startActivityForResult(new Intent(this, PickGistActivity.class), PICK_GIST);
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -76,10 +120,9 @@ public class GistIt extends ActionBarActivity {
 		@Override
 		protected Void doInBackground(String... params) {
 			App app = (App) getApplication();
-			String id = "4299973c43fa6964bce1";
-			Gist gist = app.github.getGist(id);
+			Gist gist = app.github.getGist(gistId);
 			gist.getDefaultFile().content += "  \n" + params[0];
-			app.github.update(id, gist);
+			app.github.update(gistId, gist);
 			return null;
 		}
 

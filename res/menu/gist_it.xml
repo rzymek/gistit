@@ -5,14 +5,20 @@
 
     <item
         android:id="@+id/action_send"
-        android:orderInCategory="110"
+        android:orderInCategory="150"
         android:title="Send"
         app:showAsAction="always"/>
 
     <item
         android:id="@+id/action_cancel"
-        android:orderInCategory="100"
+        android:orderInCategory="120"
         android:title="@android:string/cancel"        
         app:showAsAction="ifRoom"/>
-
+    
+    <item
+        android:id="@+id/action_select_gist"
+        android:orderInCategory="100"
+        android:title="Pick Gist"        
+        app:showAsAction="ifRoom"/>
+    
 </menu>
