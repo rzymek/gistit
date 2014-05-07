@@ -32,6 +32,7 @@ public class GistIt extends ActionBarActivity {
 					String msg = TextUtils.isEmpty(subject) ? message : "[" + subject + "](" + message + ")";
 					updateGistTask.execute(msg);
 					newText.setText(msg);
+					return;
 				}
 			}
 		}
@@ -57,6 +58,9 @@ public class GistIt extends ActionBarActivity {
 		if (id == R.id.action_send) {
 			updateGistTask.execute(newText.getText().toString());
 			return true;
+		}else if(id == R.id.action_cancel) {
+			finish();
+			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -66,6 +70,7 @@ public class GistIt extends ActionBarActivity {
 		protected void onPreExecute() {
 			progressBar.setVisibility(View.VISIBLE);
 			newText.setEnabled(false);
+			newText.setFocusable(false);
 		};
 
 		@Override
@@ -82,8 +87,9 @@ public class GistIt extends ActionBarActivity {
 		protected void onPostExecute(Void result) {
 			Toast.makeText(GistIt.this, "Gist updated", Toast.LENGTH_SHORT).show();
 			finish();
-			progressBar.setVisibility(View.INVISIBLE);
+			progressBar.setVisibility(View.GONE);
 			newText.setEnabled(true);
+			newText.setFocusable(true);
 		};
 	};
 
