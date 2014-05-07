@@ -4,4 +4,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="pl.rzymek.gistit.GistIt"
-    tools:ignore="MergeRootFrame" />
+    tools:ignore="MergeRootFrame" >
+
+    <EditText
+        android:id="@+id/newText"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="top"
+        android:inputType="textMultiLine" >
+
+        <requestFocus />
+    </EditText>
+
+</FrameLayout>

@@ -1,13 +1,8 @@
 package pl.rzymek.gistit;
 
 import java.io.IOException;
-import java.util.Date;
 
-import retrofit.Callback;
 import retrofit.RequestInterceptor;
-import retrofit.RetrofitError;
-import retrofit.RequestInterceptor.RequestFacade;
-import retrofit.client.Response;
 import retrofit.RestAdapter;
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -17,36 +12,32 @@ import android.accounts.OperationCanceledException;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
+import android.text.TextUtils;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 
 public class GistIt extends ActionBarActivity {
 
 	private GitHubService github;
-	private PlaceholderFragment fragment;
+	private TextView newText;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_gist_it);
-
+		newText = (TextView) findViewById(R.id.newText);
 		if (savedInstanceState == null) {
-			fragment = new PlaceholderFragment();
-			getSupportFragmentManager().beginTransaction().add(R.id.container, fragment).commit();
-			Log.i("XXXX", fragment.newText + "");
 			Intent intent = getIntent();
 			if (intent != null) {
 				if (Intent.ACTION_SEND.equals(intent.getAction())) {
 					String message = defaultString(intent.getStringExtra(Intent.EXTRA_TEXT), "");
 					String subject = defaultString(intent.getStringExtra(Intent.EXTRA_SUBJECT), "");
-					fragment.newText.setText(subject + "\n" + message + "  \n");
+					String msg = TextUtils.isEmpty(subject) ? message 
+							: "["+subject + "](" + message + ")";					
+					newText.setText(msg);
 				}
 			}
 		}
@@ -122,10 +113,6 @@ public class GistIt extends ActionBarActivity {
 	}
 
 	private void sendGist() {
-		readGist();
-	}
-
-	private void readGist() {
 		new AsyncTask<String, Void, String>() {
 			@Override
 			protected String doInBackground(String... params) {
@@ -133,34 +120,15 @@ public class GistIt extends ActionBarActivity {
 				String id = "4299973c43fa6964bce1";
 				Gist gist = github.getGist(id);
 				gist.getDefaultFile().content += "  \n" +
-						fragment.newText.getText();
+						newText.getText();
 				github.update(id, gist);
 				return "";
 			}
-
+		
 			protected void onPostExecute(String result) {
 				finish();
 			};
 		}.execute("");
-	}
-
-	/**
-	 * A placeholder fragment containing a simple view.
-	 */
-	public static class PlaceholderFragment extends Fragment {
-
-		TextView newText;
-
-		public PlaceholderFragment() {
-		}
-
-		@Override
-		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-			View rootView = inflater.inflate(R.layout.fragment_gist_it, container, false);
-			newText = (TextView) rootView.findViewById(R.id.newText);
-			Log.i("XXX", "newText.f=" + newText);
-			return rootView;
-		}
 	}
 
 }
