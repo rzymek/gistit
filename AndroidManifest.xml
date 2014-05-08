@@ -41,13 +41,7 @@
         <activity
             android:name=".activity.ConfigureAccount"
             android:label="@string/title_activity_configure_account" >
-        </activity>
-
-        <receiver android:name="org.gistit.activity.BR" >
-            <intent-filter>
-                <action android:name="android.accounts.LOGIN_ACCOUNTS_CHANGED" />
-            </intent-filter>
-        </receiver>
+        </activity>       
     </application>
 
 </manifest>
