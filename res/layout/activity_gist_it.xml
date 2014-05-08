@@ -13,6 +13,7 @@
         android:gravity="top"
         android:hint="Enter text to append to gist"
         android:inputType="textMultiLine" >
+        <requestFocus/>
     </EditText>
 
     <ProgressBar

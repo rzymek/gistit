@@ -17,9 +17,13 @@ public class Gist {
 	@Override
 	public String toString() {
 		if (files == null || files.isEmpty())
-			return description;
+			return def(description);
 		else 
-			return files.keySet().iterator().next() + (TextUtils.isEmpty(description) ? "" : ": " + description);
+			return files.keySet().iterator().next()+": "+def(description);
+	}
+
+	protected String def(String s) {
+		return TextUtils.isEmpty(s) ? "" : s;
 	}
 
 	public String getContent() {
