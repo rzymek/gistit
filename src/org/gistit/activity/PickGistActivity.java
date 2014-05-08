@@ -13,6 +13,8 @@ import android.widget.AdapterView.OnItemClickListener;
 
 public class PickGistActivity extends ListSelectionActivity<Gist> implements OnItemClickListener {
 
+	public static final String EMPTY_GIST_HACK = "Created with GistIt";
+
 	protected void init() {
 		adapter.clear();
 		app.github.listGists(new ListRESTCallback<List<Gist>>() {
@@ -20,14 +22,10 @@ public class PickGistActivity extends ListSelectionActivity<Gist> implements OnI
 			public void ok(List<Gist> gists) {
 				Gist newPublic = new Gist();
 				newPublic.isPublic = true;
-				newPublic.files = new HashMap<>();
-				newPublic.files.put("links.md", new GistFile());
 				newPublic.description = "Create new public gist";
 
 				Gist newSecret = new Gist();
 				newSecret.isPublic = false;
-				newSecret.files = new HashMap<>();
-				newSecret.files.put("links.md", new GistFile());
 				newSecret.description = "Create new secret gist";
 
 				adapter.add(newPublic);
@@ -46,7 +44,10 @@ public class PickGistActivity extends ListSelectionActivity<Gist> implements OnI
 			setResult("gist.id", item.id);
 		} else {
 			progress.setVisibility(View.VISIBLE);
+			item = new Gist();			
 			item.description = "GistIt notes";
+			item.files = new HashMap<>();
+			item.files.put("links.md", new GistFile(EMPTY_GIST_HACK));
 			app.github.createGist(item, new ListRESTCallback<Gist>() {
 				@Override
 				public void ok(Gist result) {

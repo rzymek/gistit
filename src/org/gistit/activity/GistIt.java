@@ -30,6 +30,7 @@ public class GistIt extends ActionBarActivity {
 	private ProgressBar progressBar;
 	private String gistId;
 	private Authenticator authenticator = new Authenticator(this);
+
 	private boolean showingAccessRequest = false;
 	private boolean waitingForAccessConfirm = false;
 
@@ -199,6 +200,8 @@ public class GistIt extends ActionBarActivity {
 				App app = (App) getApplication();
 				Gist gist = app.github.getGist(gistId);
 				String content = gist.getContent();
+				if (PickGistActivity.EMPTY_GIST_HACK.equals(content))
+					content = "";
 				String append = params[0];
 				gist.getDefaultFile().content = append + "  \n" + content;
 				publishProgress(gist.getDefaultFile().content);
@@ -216,6 +219,6 @@ public class GistIt extends ActionBarActivity {
 				Toast.makeText(GistIt.this, "Gist updated", Toast.LENGTH_SHORT).show();
 				finish();
 			};
-		}.execute(text);		
+		}.execute(text);
 	}
 }
