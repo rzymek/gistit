@@ -13,13 +13,13 @@
         android:targetSdkVersion="19" />
 
     <application
-        android:name=".App"
+        android:name="org.gistit.App"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".activity.GistIt"
+            android:name="org.gistit.activity.GistIt"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
@@ -35,13 +35,17 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.PickGistActivity"
+            android:name="org.gistit.activity.PickGistActivity"
             android:label="@string/title_activity_pick_gist" >
         </activity>
         <activity
-            android:name=".activity.ConfigureAccount"
+            android:name="org.gistit.activity.ConfigureAccount"
             android:label="@string/title_activity_configure_account" >
-        </activity>       
+        </activity>
+        <activity
+            android:name="org.gistit.activity.SelectAccountActivity"
+            android:label="@string/title_activity_select_account" >
+        </activity>
     </application>
 
 </manifest>
