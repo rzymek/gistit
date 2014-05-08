@@ -102,14 +102,14 @@ public class GistIt extends ActionBarActivity {
 		} else if (id == R.id.action_cancel) {
 			finish();
 			return true;
-		}else if(id == R.id.action_select_gist){
+		} else if (id == R.id.action_select_gist) {
 			startActivityForResult(new Intent(this, PickGistActivity.class), PICK_GIST);
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
 
-	private AsyncTask<String, Void, Void> updateGistTask = new AsyncTask<String, Void, Void>() {
+	private AsyncTask<String, String, String> updateGistTask = new AsyncTask<String, String, String>() {
 		@Override
 		protected void onPreExecute() {
 			progressBar.setVisibility(View.VISIBLE);
@@ -118,16 +118,23 @@ public class GistIt extends ActionBarActivity {
 		};
 
 		@Override
-		protected Void doInBackground(String... params) {
+		protected String doInBackground(String... params) {
 			App app = (App) getApplication();
 			Gist gist = app.github.getGist(gistId);
-			gist.getDefaultFile().content += "  \n" + params[0];
+			String content = gist.getContent();
+			String append = params[0];
+			gist.getDefaultFile().content = append + "  \n" + content;
+			publishProgress(gist.getDefaultFile().content);
 			app.github.update(gistId, gist);
-			return null;
+			return append;
+		}
+		@Override
+		protected void onProgressUpdate(String... values) {
+			newText.setText(values[0]);
 		}
 
 		@Override
-		protected void onPostExecute(Void result) {
+		protected void onPostExecute(String result) {
 			Toast.makeText(GistIt.this, "Gist updated", Toast.LENGTH_SHORT).show();
 			finish();
 			progressBar.setVisibility(View.GONE);
