@@ -1,7 +1,7 @@
 package org.gistit.model;
 
 public class GistFile {
-	public String content;
+	public String content="";
 	
 	@Override
 	public String toString() {

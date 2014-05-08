@@ -3,11 +3,15 @@ package org.gistit.model;
 import java.util.Collection;
 import java.util.Map;
 
+import com.google.gson.annotations.SerializedName;
+
 import android.text.TextUtils;
 
 public class Gist {
 	public String id;
 	public String description;
+	@SerializedName("public")
+	public boolean isPublic;
 	public Map<String, GistFile> files;
 
 	@Override

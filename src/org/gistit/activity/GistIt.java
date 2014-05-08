@@ -24,6 +24,7 @@ import android.widget.Toast;
 public class GistIt extends ActionBarActivity {
 	private static final int PICK_GIST = 1;
 	public static final int ACCESS_REQUEST = 3;
+	public static final int ACCOUNT_SELECTED = 4;
 
 	private TextView newText;
 	private ProgressBar progressBar;
@@ -31,22 +32,24 @@ public class GistIt extends ActionBarActivity {
 	private Authenticator authenticator = new Authenticator(this);
 	private boolean showingAccessRequest = false;
 	private boolean waitingForAccessConfirm = false;
+
 	@Override
 	protected void onPause() {
 		super.onPause();
-		if(showingAccessRequest)
+		if (showingAccessRequest)
 			waitingForAccessConfirm = true;
 		else
 			waitingForAccessConfirm = false;
-		Log.w("XXX","pause");
+		Log.w("XXX", "pause");
 	}
+
 	@Override
 	protected void onResume() {
 		super.onResume();
-		Log.w("XXX","resume");
-		if(waitingForAccessConfirm) {
-			waitingForAccessConfirm=false;
-			showingAccessRequest=false;
+		Log.w("XXX", "resume");
+		if (waitingForAccessConfirm) {
+			waitingForAccessConfirm = false;
+			showingAccessRequest = false;
 			authenticator.fetchGithubAuthTokenUI(new AuthRequestResult() {
 				@Override
 				public void denied(Intent intent) {
@@ -57,9 +60,10 @@ public class GistIt extends ActionBarActivity {
 				public void allowed(String token) {
 					run();
 				}
-			});	
+			});
 		}
 	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -67,23 +71,27 @@ public class GistIt extends ActionBarActivity {
 		newText = (TextView) findViewById(R.id.newText);
 		progressBar = (ProgressBar) findViewById(R.id.progressBar);
 		if (savedInstanceState == null) {
-			authenticator.fetchGithubAuthTokenUI(new AuthRequestResult() {
-
-				@Override
-				public void denied(Intent intent) {
-					if (intent != null) {
-						startActivityForResult(intent, ACCESS_REQUEST);
-					} else {
-						finish();
-					}
-				}
-
-				@Override
-				public void allowed(String token) {
-					run();
-				}
-			});
+			login();
 		}
+	}
+
+	protected void login() {
+		authenticator.fetchGithubAuthTokenUI(new AuthRequestResult() {
+
+			@Override
+			public void denied(Intent intent) {
+				if (intent != null) {
+					startActivityForResult(intent, ACCESS_REQUEST);
+				} else {
+					finish();
+				}
+			}
+
+			@Override
+			public void allowed(String token) {
+				run();
+			}
+		});
 	}
 
 	public void run() {
@@ -135,9 +143,15 @@ public class GistIt extends ActionBarActivity {
 			maybyProcessIntent();
 			break;
 		case ACCESS_REQUEST:
-			showingAccessRequest  = true;
-			Log.w("XXX","ACCESS_REQUEST");
+			showingAccessRequest = true;
+			Log.w("XXX", "ACCESS_REQUEST");
 			break;
+		case ACCOUNT_SELECTED:
+			if (resultCode != RESULT_OK) {
+				finish();
+				return;
+			}
+			login();
 		}
 	}
 

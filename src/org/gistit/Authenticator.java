@@ -2,6 +2,9 @@ package org.gistit;
 
 import java.io.IOException;
 
+import org.gistit.activity.GistIt;
+import org.gistit.activity.SelectAccountActivity;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
@@ -12,8 +15,10 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class Authenticator {
@@ -30,14 +35,7 @@ public class Authenticator {
 			callback.allowed(app.token);
 		AccountManager service = (AccountManager) parent.getSystemService(Activity.ACCOUNT_SERVICE);
 		final String ACCOUNT_TYPE = "com.github";
-		Account[] accounts = service.getAccountsByType(ACCOUNT_TYPE);
-		if (accounts.length == 0) {
-			showInstallGithubDialog();
-			return;
-		}
-		// if(accounts.length > 1)
-		// showAccountSelector
-		Account account = accounts[0];
+		Account account = getAccount(service, ACCOUNT_TYPE);
 
 		service.getAuthToken(account, ACCOUNT_TYPE, true, new AccountManagerCallback<Bundle>() {
 
@@ -59,6 +57,35 @@ public class Authenticator {
 				}
 			}
 		}, null);
+	}
+
+	protected Account getAccount(AccountManager service, final String ACCOUNT_TYPE) {
+		Account[] accounts = service.getAccountsByType(ACCOUNT_TYPE);
+		if (accounts.length == 0) {
+			showInstallGithubDialog();
+			return null;
+		}else if(accounts.length == 1){
+			return accounts[0];
+		}else  {
+			Account account = getRememberedAccount(accounts);
+			if(account != null)
+				return account;
+			parent.startActivityForResult(new Intent(parent, SelectAccountActivity.class), GistIt.ACCOUNT_SELECTED);
+			return null;			
+		}
+	}
+
+	protected Account getRememberedAccount(Account[] accounts) {
+		SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(parent);
+		String accountName = shared.getString("account.name", null);
+		if(accountName == null)
+			return null;
+		for (Account account : accounts) {
+			if(accountName.equals(account.name)) {
+				return account;
+			}
+		}
+		return null;
 	}
 
 	private void showInstallGithubDialog() {
