@@ -12,6 +12,7 @@ import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
@@ -19,6 +20,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 public abstract class ListSelectionActivity<T> extends ListActivity implements OnItemClickListener {
+	protected static final int LAYOUT_ID = R.layout.gist_list_item;
 	protected ArrayAdapter<T> adapter;
 	protected App app;
 	protected ProgressBar progress;
@@ -49,7 +51,7 @@ public abstract class ListSelectionActivity<T> extends ListActivity implements O
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_pick_gist);
 		if (savedInstanceState == null) {
-			adapter = new ArrayAdapter<T>(this, R.layout.gist_list_item);
+			adapter = createAdapter();
 			getListView().setOnItemClickListener(this);
 			setListAdapter(adapter);
 			progress = (ProgressBar) findViewById(R.id.listProgressBar);
@@ -60,16 +62,24 @@ public abstract class ListSelectionActivity<T> extends ListActivity implements O
 		}
 	}
 
+	protected ArrayAdapter<T> createAdapter() {
+		return new ArrayAdapter<T>(this, LAYOUT_ID);
+	}
+
 	protected abstract void init();
 
-	protected void setResult(String key, String value) {
+	protected void setResult(@SuppressWarnings("unchecked") Pair<String, String>... data) {
 		SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
 		Editor edit = shared.edit();
-		edit.putString(key, value);
+		for (Pair<String, String> pair : data) {
+			edit.putString(pair.first, pair.second);			
+		}
 		edit.commit();
-		Intent data = new Intent();
-		data.putExtra(key, value);
-		setResult(RESULT_OK, data);
+		Intent intent = new Intent();
+		for (Pair<String, String> pair : data) {
+			intent.putExtra(pair.first, pair.second);
+		}
+		setResult(RESULT_OK, intent);
 		finish();
 	}
 

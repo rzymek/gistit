@@ -17,4 +17,7 @@
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
     </style>
 
+    <color name="secret">#f8eec7</color>
+    <color name="white">#eeeeee</color>
+    <color name="newGist">#b8b8b8</color>
 </resources>

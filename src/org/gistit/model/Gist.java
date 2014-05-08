@@ -16,14 +16,10 @@ public class Gist {
 
 	@Override
 	public String toString() {
+		String msg = TextUtils.isEmpty(description) ? "" : description;
 		if (files == null || files.isEmpty())
-			return def(description);
-		else 
-			return files.keySet().iterator().next()+": "+def(description);
-	}
-
-	protected String def(String s) {
-		return TextUtils.isEmpty(s) ? "" : s;
+			return msg;
+		return files.keySet().iterator().next()+": "+msg;
 	}
 
 	public String getContent() {

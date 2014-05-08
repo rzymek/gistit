@@ -35,8 +35,9 @@ public class Authenticator {
 			callback.allowed(app.token);
 		AccountManager service = (AccountManager) parent.getSystemService(Activity.ACCOUNT_SERVICE);
 		final String ACCOUNT_TYPE = "com.github";
-		Account account = getAccount(service, ACCOUNT_TYPE);
-
+		Account account = getAccount(service, ACCOUNT_TYPE, false);
+		if(account == null)
+			return;
 		service.getAuthToken(account, ACCOUNT_TYPE, true, new AccountManagerCallback<Bundle>() {
 
 			@Override
@@ -48,7 +49,8 @@ public class Authenticator {
 						if (app.token != null) {
 							callback.allowed(app.token);
 						} else {
-							Intent intent = result.getParcelable(AccountManager.KEY_INTENT);
+							showWaitingForPermission(callback);
+							Intent intent = result.getParcelable(AccountManager.KEY_INTENT);							
 							callback.denied(intent);
 						}
 					}
@@ -58,11 +60,41 @@ public class Authenticator {
 			}
 		}, null);
 	}
+	@SuppressWarnings("deprecation")
+	public void fetchGithubAuthSilent(final AuthRequestResult callback) {
+		final App app = (App) parent.getApplication();
+		if (app.token != null)
+			callback.allowed(app.token);
+		AccountManager service = (AccountManager) parent.getSystemService(Activity.ACCOUNT_SERVICE);
+		final String ACCOUNT_TYPE = "com.github";
+		Account account = getAccount(service, ACCOUNT_TYPE, true);
+		if(account == null)
+			return;//abort, wait for account
+		service.getAuthToken(account, ACCOUNT_TYPE, false, new AccountManagerCallback<Bundle>() {
+			@Override
+			public void run(AccountManagerFuture<Bundle> future) {
+				try {
+					Bundle result = future.getResult();
+					if (result != null) {
+						app.token = result.getString(android.accounts.AccountManager.KEY_AUTHTOKEN);
+						if (app.token != null) {
+							callback.allowed(app.token);
+						} else {
+							callback.denied(null);
+						}
+					}
+				} catch (OperationCanceledException | AuthenticatorException | IOException e) {
+					Log.wtf("AUTH", "" + e);
+				}
+			}
+		}, null);
+	}
 
-	protected Account getAccount(AccountManager service, final String ACCOUNT_TYPE) {
+	protected Account getAccount(AccountManager service, final String ACCOUNT_TYPE, boolean silent) {
 		Account[] accounts = service.getAccountsByType(ACCOUNT_TYPE);
 		if (accounts.length == 0) {
-			showInstallGithubDialog();
+			if(!silent)
+				showInstallGithubDialog();
 			return null;
 		}else if(accounts.length == 1){
 			return accounts[0];
@@ -70,7 +102,8 @@ public class Authenticator {
 			Account account = getRememberedAccount(accounts);
 			if(account != null)
 				return account;
-			parent.startActivityForResult(new Intent(parent, SelectAccountActivity.class), GistIt.ACCOUNT_SELECTED);
+			if(!silent)
+				parent.startActivityForResult(new Intent(parent, SelectAccountActivity.class), GistIt.ACCOUNT_SELECTED);
 			return null;			
 		}
 	}
@@ -105,6 +138,28 @@ public class Authenticator {
 					parent.startActivity(new Intent(Intent.ACTION_VIEW, uri));
 				}
 
+			}
+
+		});
+		builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				parent.finish();
+			}
+		});
+		builder.create().show();
+	}
+	
+	private void showWaitingForPermission(final AuthRequestResult callback) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(parent);
+		builder.setTitle("GistIt needs permision");
+		builder.setMessage("GistIt can't connect to GitHub until you grant permission. Retry?");
+		builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				fetchGithubAuthTokenUI(callback);
 			}
 
 		});

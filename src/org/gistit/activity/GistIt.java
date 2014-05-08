@@ -31,34 +31,16 @@ public class GistIt extends ActionBarActivity {
 	private String gistId;
 	private Authenticator authenticator = new Authenticator(this);
 
-	private boolean showingAccessRequest = false;
-	private boolean waitingForAccessConfirm = false;
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-		if (showingAccessRequest)
-			waitingForAccessConfirm = true;
-		else
-			waitingForAccessConfirm = false;
-		Log.w("XXX", "pause");
-	}
+	private boolean checkForAuthOnResume = false;
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		Log.w("XXX", "resume");
-		if (waitingForAccessConfirm) {
-			waitingForAccessConfirm = false;
-			showingAccessRequest = false;
-			authenticator.fetchGithubAuthTokenUI(new AuthRequestResult() {
-				@Override
-				public void denied(Intent intent) {
-					finish();
-				}
-
+		if(checkForAuthOnResume) {
+			authenticator.fetchGithubAuthSilent(new AuthRequestResult() {
 				@Override
 				public void allowed(String token) {
+					checkForAuthOnResume=false;
 					run();
 				}
 			});
@@ -68,6 +50,7 @@ public class GistIt extends ActionBarActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		checkForAuthOnResume=false;
 		setContentView(R.layout.activity_gist_it);
 		newText = (TextView) findViewById(R.id.newText);
 		progressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -78,7 +61,6 @@ public class GistIt extends ActionBarActivity {
 
 	protected void login() {
 		authenticator.fetchGithubAuthTokenUI(new AuthRequestResult() {
-
 			@Override
 			public void denied(Intent intent) {
 				if (intent != null) {
@@ -106,6 +88,7 @@ public class GistIt extends ActionBarActivity {
 		if (gistId == null) {
 			startActivityForResult(new Intent(this, PickGistActivity.class), PICK_GIST);
 		} else {
+			setTitle(shared.getString("gist", "GistIt"));
 			maybyProcessIntent();
 		}
 	}
@@ -140,11 +123,12 @@ public class GistIt extends ActionBarActivity {
 				finish();
 				return;
 			}
-			gistId = data.getStringExtra("gist.id");
+			this.gistId = data.getStringExtra("gist.id");
+			setTitle(data.getStringExtra("gist"));
 			maybyProcessIntent();
 			break;
 		case ACCESS_REQUEST:
-			showingAccessRequest = true;
+			checkForAuthOnResume = true;
 			Log.w("XXX", "ACCESS_REQUEST");
 			break;
 		case ACCOUNT_SELECTED:
