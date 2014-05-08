@@ -28,7 +28,7 @@ public class MainActivity extends ActionBarActivity {
 	private TextView newText;
 	private ProgressBar progressBar;
 	private String gistId;
-	private Authenticator authenticator = new Authenticator(this);
+	public Authenticator authenticator = new Authenticator(this);
 
 	public Runnable onResumeAction = null;
 
@@ -39,7 +39,7 @@ public class MainActivity extends ActionBarActivity {
 		newText = (TextView) findViewById(R.id.newText);
 		progressBar = (ProgressBar) findViewById(R.id.progressBar);
 		if (savedInstanceState == null) {
-			onResumeAction = authenticator.selectAccount(null/* auto */);
+			authenticator.selectAccount(null/* auto */);
 		}
 	}
 
