@@ -1,6 +1,8 @@
-package pl.rzymek.gistit;
+package org.gistit.rest;
 
 import java.util.List;
+
+import org.gistit.model.Gist;
 
 import retrofit.Callback;
 import retrofit.http.Body;

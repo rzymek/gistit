@@ -1,6 +1,10 @@
-package pl.rzymek.gistit;
+package org.gistit.activity;
 
 import java.util.List;
+
+import org.gistit.App;
+import org.gistit.R;
+import org.gistit.model.Gist;
 
 import retrofit.Callback;
 import retrofit.RetrofitError;
@@ -10,14 +14,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
 public class PickGistActivity extends ListActivity implements OnItemClickListener {
 
@@ -33,25 +35,18 @@ public class PickGistActivity extends ListActivity implements OnItemClickListene
 			setListAdapter(adapter);
 			final App app = (App) getApplication();
 			adapter.clear();
-			app.fetchGithubAuthToken(new Handler.Callback() {
+			app.github.listGists(new Callback<List<Gist>>() {
 
 				@Override
-				public boolean handleMessage(Message msg) {
-					app.github.listGists(new Callback<List<Gist>>() {
+				public void success(List<Gist> gists, Response resp) {
+					for (Gist gist : gists) {
+						adapter.add(gist);
+					}
+				}
 
-						@Override
-						public void success(List<Gist> gists, Response resp) {
-							for (Gist gist : gists) {
-								adapter.add(gist);
-							}
-						}
-
-						@Override
-						public void failure(RetrofitError err) {
-							Log.e("GistIt", "" + err.getCause());
-						}
-					});
-					return false;
+				@Override
+				public void failure(RetrofitError err) {
+					Toast.makeText(PickGistActivity.this, err.toString(), Toast.LENGTH_SHORT).show();
 				}
 			});
 		}

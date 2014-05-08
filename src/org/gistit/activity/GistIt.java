@@ -1,4 +1,10 @@
-package pl.rzymek.gistit;
+package org.gistit.activity;
+
+import org.gistit.App;
+import org.gistit.AuthRequestResult;
+import org.gistit.Authenticator;
+import org.gistit.R;
+import org.gistit.model.Gist;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -7,6 +13,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,12 +22,44 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class GistIt extends ActionBarActivity {
-
 	private static final int PICK_GIST = 1;
+	public static final int ACCESS_REQUEST = 3;
+
 	private TextView newText;
 	private ProgressBar progressBar;
 	private String gistId;
+	private Authenticator authenticator = new Authenticator(this);
+	private boolean showingAccessRequest = false;
+	private boolean waitingForAccessConfirm = false;
+	@Override
+	protected void onPause() {
+		super.onPause();
+		if(showingAccessRequest)
+			waitingForAccessConfirm = true;
+		else
+			waitingForAccessConfirm = false;
+		Log.w("XXX","pause");
+	}
+	@Override
+	protected void onResume() {
+		super.onResume();
+		Log.w("XXX","resume");
+		if(waitingForAccessConfirm) {
+			waitingForAccessConfirm=false;
+			showingAccessRequest=false;
+			authenticator.fetchGithubAuthTokenUI(new AuthRequestResult() {
+				@Override
+				public void denied(Intent intent) {
+					finish();
+				}
 
+				@Override
+				public void allowed(String token) {
+					run();
+				}
+			});	
+		}
+	}
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -28,14 +67,37 @@ public class GistIt extends ActionBarActivity {
 		newText = (TextView) findViewById(R.id.newText);
 		progressBar = (ProgressBar) findViewById(R.id.progressBar);
 		if (savedInstanceState == null) {
+			authenticator.fetchGithubAuthTokenUI(new AuthRequestResult() {
 
-			SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
-			gistId = shared.getString("gist.id", null);
-			if (gistId == null) {
-				startActivityForResult(new Intent(this, PickGistActivity.class), PICK_GIST);
-			} else {
-				maybyProcessIntent();
-			}
+				@Override
+				public void denied(Intent intent) {
+					if (intent != null) {
+						startActivityForResult(intent, ACCESS_REQUEST);
+					} else {
+						finish();
+					}
+				}
+
+				@Override
+				public void allowed(String token) {
+					run();
+				}
+			});
+		}
+	}
+
+	public void run() {
+		App app = (App) getApplication();
+		if (app.token == null) {
+			Log.wtf("TOKEN", "no token");
+			return;
+		}
+		SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+		gistId = shared.getString("gist.id", null);
+		if (gistId == null) {
+			startActivityForResult(new Intent(this, PickGistActivity.class), PICK_GIST);
+		} else {
+			maybyProcessIntent();
 		}
 	}
 
@@ -63,13 +125,19 @@ public class GistIt extends ActionBarActivity {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		if (resultCode != RESULT_OK) {
-			finish();
-			return;
-		}
-		if (requestCode == PICK_GIST) {
+		switch (requestCode) {
+		case PICK_GIST:
+			if (resultCode != RESULT_OK) {
+				finish();
+				return;
+			}
 			gistId = data.getStringExtra("gist.id");
 			maybyProcessIntent();
+			break;
+		case ACCESS_REQUEST:
+			showingAccessRequest  = true;
+			Log.w("XXX","ACCESS_REQUEST");
+			break;
 		}
 	}
 
@@ -122,6 +190,7 @@ public class GistIt extends ActionBarActivity {
 			app.github.update(gistId, gist);
 			return append;
 		}
+
 		@Override
 		protected void onProgressUpdate(String... values) {
 			newText.setText(values[0]);

@@ -1,4 +1,4 @@
-package pl.rzymek.gistit;
+package org.gistit.model;
 
 public class GistFile {
 	public String content;

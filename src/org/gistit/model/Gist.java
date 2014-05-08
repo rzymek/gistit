@@ -1,4 +1,4 @@
-package pl.rzymek.gistit;
+package org.gistit.model;
 
 import java.util.Collection;
 import java.util.Map;
