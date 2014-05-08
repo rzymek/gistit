@@ -30,7 +30,7 @@ public class MainActivity extends ActionBarActivity {
 	private String gistId;
 	private Authenticator authenticator = new Authenticator(this);
 
-	private boolean checkForAuthOnResume = false;
+	public Runnable onResumeAction = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -39,15 +39,12 @@ public class MainActivity extends ActionBarActivity {
 		newText = (TextView) findViewById(R.id.newText);
 		progressBar = (ProgressBar) findViewById(R.id.progressBar);
 		if (savedInstanceState == null) {
-			Runnable uiAction = authenticator.selectAccount(null/*auto*/);
-			if (uiAction != null) {
-				uiAction.run();
-			}
+			onResumeAction = authenticator.selectAccount(null/* auto */);
 		}
 	}
 
 	public void onLoggedIn() {
-		checkForAuthOnResume = false;
+		onResumeAction = null;
 		App app = (App) getApplication();
 		if (app.token == null) {
 			Log.wtf("TOKEN", "no token");
@@ -66,8 +63,8 @@ public class MainActivity extends ActionBarActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if (checkForAuthOnResume) {
-			authenticator.checkForAuthToken();
+		if (onResumeAction != null) {
+			onResumeAction.run();
 		}
 	}
 
@@ -102,19 +99,24 @@ public class MainActivity extends ActionBarActivity {
 		case PICK_GIST:
 			if (resultCode != RESULT_OK) {
 				finish();
-			}else{
+			} else {
 				this.gistId = data.getStringExtra("gist.id");
 				setTitle(data.getStringExtra("gist"));
 				maybyProcessIntent();
 			}
 			break;
 		case ACCESS_REQUEST:
-			checkForAuthOnResume = true;
+			onResumeAction = new Runnable() {
+				@Override
+				public void run() {
+					authenticator.checkForAuthToken();
+				}
+			};
 			break;
 		case ACCOUNT_SELECTED:
 			if (resultCode != RESULT_OK) {
 				finish();
-			}else{
+			} else {
 				String accountName = data.getStringExtra("account.name");
 				authenticator.selectAccount(accountName);
 			}

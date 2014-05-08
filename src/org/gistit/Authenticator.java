@@ -22,6 +22,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class Authenticator {
+	private final static String GITHUB_APP = "com.github.mobile";
 	final String ACCOUNT_TYPE = "com.github";
 	private MainActivity main;
 	private Account selectedAccount;
@@ -35,12 +36,24 @@ public class Authenticator {
 	}
 
 	public Runnable selectAccount(String accountName) {
-		Account[] accounts = getAccountManager().getAccountsByType(ACCOUNT_TYPE);
+		AccountManager manager = getAccountManager();
+		Account[] accounts = manager.getAccountsByType(ACCOUNT_TYPE);
 		if (accounts.length == 0) {
 			return new Runnable() {
 				@Override
 				public void run() {
-					showInstallGithubDialog();
+					Intent github = main.getPackageManager().getLaunchIntentForPackage(GITHUB_APP);
+					if (github != null) {
+						main.startActivity(github);
+					} else {
+						showInstallGithubDialog();
+					}
+					main.onResumeAction = new Runnable() {
+						@Override
+						public void run() {
+							main.onResumeAction = selectAccount(null);
+						}
+					};
 				}
 			};
 		} else if (accounts.length == 1) {
@@ -114,7 +127,7 @@ public class Authenticator {
 	}
 
 	protected Account getRememberedAccount(Account[] accounts, String accountName) {
-		if(accountName == null) {
+		if (accountName == null) {
 			SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(main);
 			accountName = shared.getString("account.name", null);
 		}
@@ -130,20 +143,25 @@ public class Authenticator {
 
 	private void showInstallGithubDialog() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(main);
-		builder.setTitle("No GitHub account configured");
-		builder.setMessage("Install GitHub Mobile application");
+		builder.setTitle("GitHub");
+		builder.setMessage("Install GitHub application and setup at least one account.");
 		builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				String appPackageName = "com.github.mobile";
 				try {
-					Uri uri = Uri.parse("market://details?id=" + appPackageName);
+					Uri uri = Uri.parse("market://details?id=" + GITHUB_APP);
 					main.startActivity(new Intent(Intent.ACTION_VIEW, uri));
 				} catch (android.content.ActivityNotFoundException anfe) {
-					Uri uri = Uri.parse("http://play.google.com/store/apps/details?id=" + appPackageName);
+					Uri uri = Uri.parse("http://play.google.com/store/apps/details?id=" + GITHUB_APP);
 					main.startActivity(new Intent(Intent.ACTION_VIEW, uri));
 				}
+				main.onResumeAction = new Runnable() {
+					@Override
+					public void run() {
+						Authenticator.this.selectAccount(null);
+					}
+				};
 			}
 		});
 		builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
