@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 public class PickGistActivity extends ListSelectionActivity<Gist> implements OnItemClickListener {
 
+	/** Can't create an empty gist. Use this text instead on initial commit (to get gistId). */
 	public static final String EMPTY_GIST_HACK = "Created with GistIt";
 
 	protected void init() {
@@ -69,7 +70,7 @@ public class PickGistActivity extends ListSelectionActivity<Gist> implements OnI
 		if (item.id != null) {
 			setResult(item);
 		} else {
-			progress.setVisibility(View.VISIBLE);
+			startProgress();
 			item = new Gist();
 			item.description = "GistIt notes";
 			item.files = new HashMap<>();

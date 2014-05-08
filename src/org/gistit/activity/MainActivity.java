@@ -1,7 +1,6 @@
 package org.gistit.activity;
 
 import org.gistit.App;
-import org.gistit.AuthRequestResult;
 import org.gistit.Authenticator;
 import org.gistit.R;
 import org.gistit.model.Gist;
@@ -21,7 +20,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class GistIt extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity {
 	private static final int PICK_GIST = 1;
 	public static final int ACCESS_REQUEST = 3;
 	public static final int ACCOUNT_SELECTED = 4;
@@ -34,50 +33,21 @@ public class GistIt extends ActionBarActivity {
 	private boolean checkForAuthOnResume = false;
 
 	@Override
-	protected void onResume() {
-		super.onResume();
-		if(checkForAuthOnResume) {
-			authenticator.fetchGithubAuthSilent(new AuthRequestResult() {
-				@Override
-				public void allowed(String token) {
-					checkForAuthOnResume=false;
-					run();
-				}
-			});
-		}
-	}
-
-	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		checkForAuthOnResume=false;
 		setContentView(R.layout.activity_gist_it);
 		newText = (TextView) findViewById(R.id.newText);
 		progressBar = (ProgressBar) findViewById(R.id.progressBar);
 		if (savedInstanceState == null) {
-			login();
+			Runnable uiAction = authenticator.selectAccount(null/*auto*/);
+			if (uiAction != null) {
+				uiAction.run();
+			}
 		}
 	}
 
-	protected void login() {
-		authenticator.fetchGithubAuthTokenUI(new AuthRequestResult() {
-			@Override
-			public void denied(Intent intent) {
-				if (intent != null) {
-					startActivityForResult(intent, ACCESS_REQUEST);
-				} else {
-					finish();
-				}
-			}
-
-			@Override
-			public void allowed(String token) {
-				run();
-			}
-		});
-	}
-
-	public void run() {
+	public void onLoggedIn() {
+		checkForAuthOnResume = false;
 		App app = (App) getApplication();
 		if (app.token == null) {
 			Log.wtf("TOKEN", "no token");
@@ -93,6 +63,14 @@ public class GistIt extends ActionBarActivity {
 		}
 	}
 
+	@Override
+	protected void onResume() {
+		super.onResume();
+		if (checkForAuthOnResume) {
+			authenticator.checkForAuthToken();
+		}
+	}
+
 	private void maybyProcessIntent() {
 		String msg = getSharedMessage();
 		if (msg != null) {
@@ -105,10 +83,13 @@ public class GistIt extends ActionBarActivity {
 		Intent intent = getIntent();
 		if (intent != null) {
 			if (Intent.ACTION_SEND.equals(intent.getAction())) {
-				String message = defaultString(intent.getStringExtra(Intent.EXTRA_TEXT), "");
+				String value = intent.getStringExtra(Intent.EXTRA_TEXT);
+				String message = (value == null ? "" : value);
 				String subject = intent.getStringExtra(Intent.EXTRA_SUBJECT);
-				String msg = TextUtils.isEmpty(subject) ? message : "[" + subject + "](" + message + ")";
-				return msg;
+				if (TextUtils.isEmpty(subject))
+					return message;
+				else
+					return "[" + subject + "](" + message + ")";
 			}
 		}
 		return null;
@@ -121,27 +102,24 @@ public class GistIt extends ActionBarActivity {
 		case PICK_GIST:
 			if (resultCode != RESULT_OK) {
 				finish();
-				return;
+			}else{
+				this.gistId = data.getStringExtra("gist.id");
+				setTitle(data.getStringExtra("gist"));
+				maybyProcessIntent();
 			}
-			this.gistId = data.getStringExtra("gist.id");
-			setTitle(data.getStringExtra("gist"));
-			maybyProcessIntent();
 			break;
 		case ACCESS_REQUEST:
 			checkForAuthOnResume = true;
-			Log.w("XXX", "ACCESS_REQUEST");
 			break;
 		case ACCOUNT_SELECTED:
 			if (resultCode != RESULT_OK) {
 				finish();
-				return;
+			}else{
+				String accountName = data.getStringExtra("account.name");
+				authenticator.selectAccount(accountName);
 			}
-			login();
+			break;
 		}
-	}
-
-	private String defaultString(String value, String defaultValue) {
-		return value == null ? defaultValue : value;
 	}
 
 	@Override
@@ -200,9 +178,10 @@ public class GistIt extends ActionBarActivity {
 
 			@Override
 			protected void onPostExecute(String result) {
-				Toast.makeText(GistIt.this, "Gist updated", Toast.LENGTH_SHORT).show();
+				Toast.makeText(MainActivity.this, "Gist updated", Toast.LENGTH_SHORT).show();
 				finish();
 			};
 		}.execute(text);
 	}
+
 }

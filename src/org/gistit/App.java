@@ -35,5 +35,5 @@ public class App extends Application {
 		}).setClient(client).build();
 
 		github = restAdapter.create(GitHubService.class);
-	}
+	}	
 }

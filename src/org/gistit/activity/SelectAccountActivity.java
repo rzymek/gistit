@@ -12,7 +12,6 @@ import android.widget.AdapterView.OnItemClickListener;
 
 public class SelectAccountActivity extends ListSelectionActivity<Account> implements OnItemClickListener {
 
-
 	@Override
 	protected void init() {
 		AccountManager service = (AccountManager) getSystemService(Activity.ACCOUNT_SERVICE);
@@ -22,7 +21,7 @@ public class SelectAccountActivity extends ListSelectionActivity<Account> implem
 		for (Account account : accounts) {
 			adapter.add(account);
 		}
-		progress.setVisibility(View.GONE);
+		stopProgress();
 	}
 
 	@Override

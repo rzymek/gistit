@@ -23,12 +23,12 @@ public abstract class ListSelectionActivity<T> extends ListActivity implements O
 	protected static final int LAYOUT_ID = R.layout.gist_list_item;
 	protected ArrayAdapter<T> adapter;
 	protected App app;
-	protected ProgressBar progress;
+	private ProgressBar progress;
 
 	protected abstract class ListRESTCallback<K> extends RESTCallback<K> {
 		@Override
 		protected void always() {
-			progress.setVisibility(View.GONE);
+			stopProgress();
 		}
 
 		@Override
@@ -36,11 +36,8 @@ public abstract class ListSelectionActivity<T> extends ListActivity implements O
 			String msg = "GistIt: Unspecified REST error";
 			if (err != null) {
 				err.printStackTrace();
-				msg = err.getMessage()+"\n"+
-						"URL: "+err.getUrl()+"\n"+
-						"Cause:"+err.getCause()+"\n"+
-						"Resp:"+err.getResponse();
-				Log.e("REST",msg);
+				msg = err.getMessage() + "\n" + "URL: " + err.getUrl() + "\n" + "Cause:" + err.getCause() + "\n" + "Resp:" + err.getResponse();
+				Log.e("REST", msg);
 			}
 			Toast.makeText(ListSelectionActivity.this, msg, Toast.LENGTH_SHORT).show();
 		}
@@ -57,7 +54,7 @@ public abstract class ListSelectionActivity<T> extends ListActivity implements O
 			progress = (ProgressBar) findViewById(R.id.listProgressBar);
 			app = (App) getApplication();
 
-			progress.setVisibility(View.VISIBLE);
+			startProgress();
 			init();
 		}
 	}
@@ -72,7 +69,7 @@ public abstract class ListSelectionActivity<T> extends ListActivity implements O
 		SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
 		Editor edit = shared.edit();
 		for (Pair<String, String> pair : data) {
-			edit.putString(pair.first, pair.second);			
+			edit.putString(pair.first, pair.second);
 		}
 		edit.commit();
 		Intent intent = new Intent();
@@ -81,6 +78,16 @@ public abstract class ListSelectionActivity<T> extends ListActivity implements O
 		}
 		setResult(RESULT_OK, intent);
 		finish();
+	}
+
+	protected void startProgress() {
+		progress.setVisibility(View.VISIBLE);
+		getListView().setEnabled(false);
+	}
+
+	protected void stopProgress() {
+		progress.setVisibility(View.GONE);
+		getListView().setEnabled(true);
 	}
 
 }
