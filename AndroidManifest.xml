@@ -39,5 +39,6 @@
             android:label="@string/title_activity_pick_gist" >
         </activity>
     </application>
+    
 
 </manifest>

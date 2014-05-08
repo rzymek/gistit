@@ -66,10 +66,6 @@ public class PickGistActivity extends ListActivity implements OnItemClickListene
 		edit.commit();
 		Intent data = new Intent();
 		data.putExtra("gist.id", item.id);
-		Intent intent = getIntent();
-		if (intent.hasExtra("msg")) {
-			data.putExtra("msg", intent.getStringExtra("msg"));
-		}
 		setResult(RESULT_OK, data);
 		finish();
 	}

@@ -31,20 +31,16 @@ public class GistIt extends ActionBarActivity {
 
 			SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
 			gistId = shared.getString("gist.id", null);
-			String msg = getSharedMessage();
 			if (gistId == null) {
-				Intent intent = new Intent(this, PickGistActivity.class);
-				if (msg != null) {
-					intent.putExtra("msg", msg);
-				}
-				startActivityForResult(intent, PICK_GIST);
+				startActivityForResult(new Intent(this, PickGistActivity.class), PICK_GIST);
 			} else {
-				maybyProcessIntent(msg);
+				maybyProcessIntent();
 			}
 		}
 	}
 
-	private void maybyProcessIntent(String msg) {
+	private void maybyProcessIntent() {
+		String msg = getSharedMessage();
 		if (msg != null) {
 			updateGistTask.execute(msg);
 			newText.setText(msg);
@@ -73,9 +69,7 @@ public class GistIt extends ActionBarActivity {
 		}
 		if (requestCode == PICK_GIST) {
 			gistId = data.getStringExtra("gist.id");
-			if (data.hasExtra("msg")) {
-				maybyProcessIntent(data.getStringExtra("msg"));
-			}
+			maybyProcessIntent();
 		}
 	}
 
