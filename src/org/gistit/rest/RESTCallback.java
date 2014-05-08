@@ -10,7 +10,7 @@ public abstract class RESTCallback<T> implements Callback<T> {
 	@Override
 	public void failure(RetrofitError e) {
 		Log.e("REST", "" + e);
-		error(e.getCause());
+		error(e);
 		always();
 	}
 
@@ -22,7 +22,7 @@ public abstract class RESTCallback<T> implements Callback<T> {
 
 	protected abstract void ok(T result);
 
-	protected void error(Throwable throwable) {
+	protected void error(RetrofitError e) {
 	}
 
 	protected void always() {

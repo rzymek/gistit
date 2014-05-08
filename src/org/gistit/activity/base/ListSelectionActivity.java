@@ -4,12 +4,14 @@ import org.gistit.App;
 import org.gistit.R;
 import org.gistit.rest.RESTCallback;
 
+import retrofit.RetrofitError;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
@@ -28,10 +30,18 @@ public abstract class ListSelectionActivity<T> extends ListActivity implements O
 		}
 
 		@Override
-		public void error(Throwable err) {
-			Toast.makeText(ListSelectionActivity.this, err.toString(), Toast.LENGTH_SHORT).show();
+		public void error(RetrofitError err) {
+			String msg = "GistIt: Unspecified REST error";
+			if (err != null) {
+				err.printStackTrace();
+				msg = err.getMessage()+"\n"+
+						"URL: "+err.getUrl()+"\n"+
+						"Cause:"+err.getCause()+"\n"+
+						"Resp:"+err.getResponse();
+				Log.e("REST",msg);
+			}
+			Toast.makeText(ListSelectionActivity.this, msg, Toast.LENGTH_SHORT).show();
 		}
-
 	}
 
 	@Override

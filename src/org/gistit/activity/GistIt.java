@@ -112,7 +112,7 @@ public class GistIt extends ActionBarActivity {
 	private void maybyProcessIntent() {
 		String msg = getSharedMessage();
 		if (msg != null) {
-			updateGistTask.execute(msg);
+			updateGistAsync(msg);
 			newText.setText(msg);
 		}
 	}
@@ -173,7 +173,7 @@ public class GistIt extends ActionBarActivity {
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
 		if (id == R.id.action_send) {
-			updateGistTask.execute(newText.getText().toString());
+			updateGistAsync(newText.getText().toString());
 			return true;
 		} else if (id == R.id.action_cancel) {
 			finish();
@@ -185,39 +185,37 @@ public class GistIt extends ActionBarActivity {
 		return super.onOptionsItemSelected(item);
 	}
 
-	private AsyncTask<String, String, String> updateGistTask = new AsyncTask<String, String, String>() {
-		@Override
-		protected void onPreExecute() {
-			progressBar.setVisibility(View.VISIBLE);
-			newText.setEnabled(false);
-			newText.setFocusable(false);
-		};
+	private void updateGistAsync(String text) {
+		new AsyncTask<String, String, String>() {
+			@Override
+			protected void onPreExecute() {
+				progressBar.setVisibility(View.VISIBLE);
+				newText.setEnabled(false);
+				newText.setFocusable(false);
+			};
 
-		@Override
-		protected String doInBackground(String... params) {
-			App app = (App) getApplication();
-			Gist gist = app.github.getGist(gistId);
-			String content = gist.getContent();
-			String append = params[0];
-			gist.getDefaultFile().content = append + "  \n" + content;
-			publishProgress(gist.getDefaultFile().content);
-			app.github.update(gistId, gist);
-			return append;
-		}
+			@Override
+			protected String doInBackground(String... params) {
+				App app = (App) getApplication();
+				Gist gist = app.github.getGist(gistId);
+				String content = gist.getContent();
+				String append = params[0];
+				gist.getDefaultFile().content = append + "  \n" + content;
+				publishProgress(gist.getDefaultFile().content);
+				app.github.update(gistId, gist);
+				return append;
+			}
 
-		@Override
-		protected void onProgressUpdate(String... values) {
-			newText.setText(values[0]);
-		}
+			@Override
+			protected void onProgressUpdate(String... values) {
+				newText.setText(values[0]);
+			}
 
-		@Override
-		protected void onPostExecute(String result) {
-			Toast.makeText(GistIt.this, "Gist updated", Toast.LENGTH_SHORT).show();
-			finish();
-			progressBar.setVisibility(View.GONE);
-			newText.setEnabled(true);
-			newText.setFocusable(true);
-		};
-	};
-
+			@Override
+			protected void onPostExecute(String result) {
+				Toast.makeText(GistIt.this, "Gist updated", Toast.LENGTH_SHORT).show();
+				finish();
+			};
+		}.execute(text);		
+	}
 }
