@@ -1,18 +1,14 @@
 package org.gistit.activity;
 
 import org.gistit.App;
-import org.gistit.Authenticator;
 import org.gistit.R;
 import org.gistit.model.Gist;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,56 +23,37 @@ public class MainActivity extends ActionBarActivity {
 
 	private TextView newText;
 	private ProgressBar progressBar;
-	private String gistId;
-	public Authenticator authenticator = new Authenticator(this);
-
-	public Runnable onResumeAction = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		saveSharedMessage();
+		if (!app().isConfigured()) {
+			startActivity(new Intent(this, SetupChecklistActivity.class));
+			finish();
+			return;
+		}
 		setContentView(R.layout.activity_gist_it);
 		newText = (TextView) findViewById(R.id.newText);
 		progressBar = (ProgressBar) findViewById(R.id.progressBar);
-		if (savedInstanceState == null) {
-			authenticator.selectAccount(null/* auto */);
-		}
+		setTitle(app().gistName);
+		maybyProcessIntent();
+
 	}
 
-	public void onLoggedIn() {
-		onResumeAction = null;
-		App app = (App) getApplication();
-		if (app.token == null) {
-			Log.wtf("TOKEN", "no token");
-			return;
-		}
-		SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
-		gistId = shared.getString("gist.id", null);
-		if (gistId == null) {
-			startActivityForResult(new Intent(this, PickGistActivity.class), PICK_GIST);
-		} else {
-			setTitle(shared.getString("gist", "GistIt"));
-			maybyProcessIntent();
-		}
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		if (onResumeAction != null) {
-			onResumeAction.run();
-		}
+	protected App app() {
+		return (App) getApplication();
 	}
 
 	private void maybyProcessIntent() {
-		String msg = getSharedMessage();
+		String msg = app().msg;
 		if (msg != null) {
 			updateGistAsync(msg);
 			newText.setText(msg);
 		}
 	}
 
-	private String getSharedMessage() {
+	private void saveSharedMessage() {
 		Intent intent = getIntent();
 		if (intent != null) {
 			if (Intent.ACTION_SEND.equals(intent.getAction())) {
@@ -84,43 +61,20 @@ public class MainActivity extends ActionBarActivity {
 				String message = (value == null ? "" : value);
 				String subject = intent.getStringExtra(Intent.EXTRA_SUBJECT);
 				if (TextUtils.isEmpty(subject))
-					return message;
+					app().msg = message;
 				else
-					return "[" + subject + "](" + message + ")";
+					app().msg =  "[" + subject + "](" + message + ")";
 			}
-		}
-		return null;
+		}		
 	}
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		switch (requestCode) {
-		case PICK_GIST:
-			if (resultCode != RESULT_OK) {
-				finish();
-			} else {
-				this.gistId = data.getStringExtra("gist.id");
-				setTitle(data.getStringExtra("gist"));
-				maybyProcessIntent();
-			}
-			break;
-		case ACCESS_REQUEST:
-			onResumeAction = new Runnable() {
-				@Override
-				public void run() {
-					authenticator.checkForAuthToken();
-				}
-			};
-			break;
-		case ACCOUNT_SELECTED:
-			if (resultCode != RESULT_OK) {
-				finish();
-			} else {
-				String accountName = data.getStringExtra("account.name");
-				authenticator.selectAccount(accountName);
-			}
-			break;
+		if (requestCode == PICK_GIST && resultCode == RESULT_OK) {
+			this.app().gistId = data.getStringExtra("gist.id");
+			setTitle(data.getStringExtra("gist"));
+			maybyProcessIntent();
 		}
 	}
 
@@ -161,15 +115,15 @@ public class MainActivity extends ActionBarActivity {
 
 			@Override
 			protected String doInBackground(String... params) {
-				App app = (App) getApplication();
-				Gist gist = app.github.getGist(gistId);
+				App app = app();
+				Gist gist = app.github.getGist(app().gistId);
 				String content = gist.getContent();
 				if (PickGistActivity.EMPTY_GIST_HACK.equals(content))
 					content = "";
 				String append = params[0];
 				gist.getDefaultFile().content = append + "  \n" + content;
 				publishProgress(gist.getDefaultFile().content);
-				app.github.update(gistId, gist);
+				app.github.update(app().gistId, gist);
 				return append;
 			}
 
@@ -181,6 +135,7 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			protected void onPostExecute(String result) {
 				Toast.makeText(MainActivity.this, "Gist updated", Toast.LENGTH_SHORT).show();
+				app().msg = null;
 				finish();
 			};
 		}.execute(text);

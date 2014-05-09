@@ -7,5 +7,6 @@
     <string name="title_activity_pick_gist">Pick the Gist to append to</string>
     <string name="title_activity_configure_account">ConfigureAccount</string>
     <string name="title_activity_select_account">SelectAccountActivity</string>
+    <string name="title_activity_setup_checklist">SetupChecklistActivity</string>
 
 </resources>

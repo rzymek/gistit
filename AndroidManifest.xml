@@ -46,6 +46,10 @@
             android:name="org.gistit.activity.SelectAccountActivity"
             android:label="@string/title_activity_select_account" >
         </activity>
+        <activity
+            android:name="org.gistit.activity.SetupChecklistActivity"
+            android:label="@string/title_activity_setup_checklist" >
+        </activity>
     </application>
 
 </manifest>
