@@ -7,6 +7,7 @@ import org.gistit.R;
 import org.gistit.activity.base.ListSelectionActivity;
 import org.gistit.model.Gist;
 import org.gistit.model.GistFile;
+import org.gistit.util.SPair;
 
 import android.graphics.Typeface;
 import android.util.Pair;
@@ -86,7 +87,7 @@ public class PickGistActivity extends ListSelectionActivity<Gist> implements OnI
 	}
 
 	protected void setResult(Gist item) {
-		setResult(Pair.create("gist.id", item.id), Pair.create("gist", item.toString()));
+		setResult(SPair.mk("gist.id", item.id), SPair.mk("gist", item));
 	}
 
 }
