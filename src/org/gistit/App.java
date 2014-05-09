@@ -35,7 +35,7 @@ public class App extends Application {
 		}).setErrorHandler(new ErrorHandler() {
 			@Override
 			public Throwable handleError(RetrofitError error) {
-				Log.e("RETROFIT", error + "\n" + error.getCause());
+				Log.e("RETROFIT", error + "\n" + error.getMessage()+"\n"+error.getCause()+"\n"+error.getResponse().getReason());
 				return error.getCause();
 			}
 		}).setClient(client).build();
