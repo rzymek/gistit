@@ -1,4 +1,4 @@
-package org.gistit;
+package org.gistit.auth;
 
 import org.gistit.activity.MainActivity;
 
@@ -31,13 +31,13 @@ public class Dialogs {
 				} catch (android.content.ActivityNotFoundException anfe) {
 					Uri uri = Uri.parse("http://play.google.com/store/apps/details?id=" + GITHUB_APP);
 					main.startActivity(new Intent(Intent.ACTION_VIEW, uri));
-				}
-				main.onResumeAction = new Runnable() {
-					@Override
-					public void run() {
-						main.authenticator.selectAccount(null);
-					}
-				};
+				}			
+//				main.onResumeAction = new Runnable() {
+//					@Override
+//					public void run() {
+//						main.authenticator.selectAccount(null);
+//					}
+//				};
 			}
 		});
 		builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
@@ -58,7 +58,7 @@ public class Dialogs {
 
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				main.authenticator.onAccountSelected(main.authenticator.selectedAccount);// retry
+				main.authenticator.askForPermission();
 			}
 
 		});
@@ -83,5 +83,12 @@ public class Dialogs {
 			waitingForPermission = createWaitingForPermission();
 		}
 		return waitingForPermission;
+	}
+
+	public void dismissAll() {
+		if (waitingForPermission != null)
+			waitingForPermission.dismiss();
+		if (installGithubDialog != null)
+			installGithubDialog.dismiss();
 	}
 }

@@ -1,8 +1,10 @@
 package org.gistit.activity;
 
+import java.nio.channels.GatheringByteChannel;
+
 import org.gistit.App;
-import org.gistit.Authenticator;
 import org.gistit.R;
+import org.gistit.auth.Authenticator;
 import org.gistit.model.Gist;
 
 import android.content.Intent;
@@ -12,7 +14,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,7 +31,7 @@ public class MainActivity extends ActionBarActivity {
 	private String gistId;
 	public Authenticator authenticator = new Authenticator(this);
 
-	public Runnable onResumeAction = null;
+	// public Runnable onResumeAction = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -40,35 +41,39 @@ public class MainActivity extends ActionBarActivity {
 		progressBar = (ProgressBar) findViewById(R.id.progressBar);
 		if (savedInstanceState == null) {
 			authenticator.selectAccount(null/* auto */);
-		}
-	}
-
-	public void onLoggedIn() {
-		onResumeAction = null;
-		App app = (App) getApplication();
-		if (app.token == null) {
-			Log.wtf("TOKEN", "no token");
-			return;
-		}
-		SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
-		gistId = shared.getString("gist.id", null);
-		if (gistId == null) {
-			startActivityForResult(new Intent(this, PickGistActivity.class), PICK_GIST);
-		} else {
-			setTitle(shared.getString("gist", "GistIt"));
-			maybyProcessIntent();
+			loadGistIdFromConfig();
 		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if (onResumeAction != null) {
-			onResumeAction.run();
+		if (!authenticator.isLoggedIn()) {
+			authenticator.dialogs.dismissAll();
+			authenticator.selectAccount(null);
 		}
+		App app = (App) getApplication();
+		if(app.token == null)
+			return;
+		if (gistId == null) {
+			loadGistIdFromConfig();
+			if (gistId == null) {
+				startActivityForResult(new Intent(this, PickGistActivity.class), PICK_GIST);
+			}
+		}
+		maybyProcessIntent();
+	}
+
+	private SharedPreferences loadGistIdFromConfig() {
+		SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+		gistId = shared.getString("gist.id", null);
+		setTitle(shared.getString("gist", "GistIt"));
+		return shared;
 	}
 
 	private void maybyProcessIntent() {
+		if(gistId == null)
+			return;
 		String msg = getSharedMessage();
 		if (msg != null) {
 			updateGistAsync(msg);
@@ -98,7 +103,9 @@ public class MainActivity extends ActionBarActivity {
 		switch (requestCode) {
 		case PICK_GIST:
 			if (resultCode != RESULT_OK) {
-				finish();
+				if (this.gistId == null) {
+					finish();
+				}
 			} else {
 				this.gistId = data.getStringExtra("gist.id");
 				setTitle(data.getStringExtra("gist"));
@@ -106,12 +113,12 @@ public class MainActivity extends ActionBarActivity {
 			}
 			break;
 		case ACCESS_REQUEST:
-			onResumeAction = new Runnable() {
-				@Override
-				public void run() {
-					authenticator.checkForAuthToken();
-				}
-			};
+			// onResumeAction = new Runnable() {
+			// @Override
+			// public void run() {
+			// authenticator.checkForAuthToken();
+			// }
+			// };
 			break;
 		case ACCOUNT_SELECTED:
 			if (resultCode != RESULT_OK) {
@@ -184,6 +191,11 @@ public class MainActivity extends ActionBarActivity {
 				finish();
 			};
 		}.execute(text);
+	}
+
+	public void onLoggedIn() {
+		// TODO Auto-generated method stub
+
 	}
 
 }

@@ -1,7 +1,8 @@
-package org.gistit;
+package org.gistit.auth;
 
 import java.io.IOException;
 
+import org.gistit.App;
 import org.gistit.activity.MainActivity;
 import org.gistit.activity.SelectAccountActivity;
 
@@ -23,7 +24,7 @@ public class Authenticator {
 	final String ACCOUNT_TYPE = "com.github";
 	private MainActivity main;
 	Account selectedAccount;
-	private Dialogs dialogs;
+	public Dialogs dialogs;
 
 	public Authenticator(MainActivity activity) {
 		this.main = activity;
@@ -40,84 +41,85 @@ public class Authenticator {
 		if (accounts.length == 0) {
 			AlertDialog dialog = dialogs.getInstallGithubDialog();
 			ensureVisible(dialog);
-			main.onResumeAction = new Runnable() {
-				@Override
-				public void run() {
-					selectAccount(null);
-				}
-			};
+			// main.onResumeAction = new Runnable() {
+			// @Override
+			// public void run() {
+			// selectAccount(null);
+			// }
+			// };
 		} else if (accounts.length == 1) {
-			onAccountSelected(accounts[0]);
+			selectedAccount = accounts[0];
+			grabAuthToken();
 		} else {
 			Account account = getRememberedAccount(accounts, accountName);
 			if (account != null) {
-				onAccountSelected(account);
+				selectedAccount = accounts[0];
+				grabAuthToken();
 			} else {
-				main.onResumeAction = new Runnable() {
-					@Override
-					public void run() {
-						main.startActivityForResult(new Intent(main, SelectAccountActivity.class), MainActivity.ACCOUNT_SELECTED);
-					}
-				};
+				// main.onResumeAction = new Runnable() {
+				// @Override
+				// public void run() {
+				main.startActivityForResult(new Intent(main, SelectAccountActivity.class),
+						MainActivity.ACCOUNT_SELECTED);
+				// }
+				// };
 			}
 		}
 	}
 
 	protected void ensureVisible(AlertDialog dialog) {
-		dialog.hide();
+		dialogs.dismissAll();
 		dialog.show();
 	}
 
 	@SuppressWarnings("deprecation")
-	public void onAccountSelected(Account account) {
-		this.selectedAccount = account;
+	public void askForPermission() {
 		boolean notifyAuthFailure = true;
-		getAccountManager().getAuthToken(account, ACCOUNT_TYPE, notifyAuthFailure, new AccountManagerCallback<Bundle>() {
-			@Override
-			public void run(AccountManagerFuture<Bundle> future) {
-				try {
-					Bundle result = future.getResult();
-					if (result != null) {
-						getApp().token = result.getString(android.accounts.AccountManager.KEY_AUTHTOKEN);
-						if (getApp().token != null) {
-							main.onLoggedIn();
-						} else {
-							AlertDialog dialog = dialogs.getWaitingForPermission();
-							ensureVisible(dialog);
-							Intent intent = result.getParcelable(AccountManager.KEY_INTENT);
-							if (intent != null) {
-								main.startActivityForResult(intent, MainActivity.ACCESS_REQUEST);
-							} else {
-								main.finish();
+		getAccountManager().getAuthToken(selectedAccount, ACCOUNT_TYPE, notifyAuthFailure,
+				new AccountManagerCallback<Bundle>() {
+					@Override
+					public void run(AccountManagerFuture<Bundle> future) {
+						try {
+							Bundle result = future.getResult();
+							if (result != null) {
+								getApp().token = result.getString(android.accounts.AccountManager.KEY_AUTHTOKEN);
 							}
+						} catch (OperationCanceledException | AuthenticatorException | IOException e) {
+							Log.wtf("AUTH", "" + e);
 						}
 					}
-				} catch (OperationCanceledException | AuthenticatorException | IOException e) {
-					Log.wtf("AUTH", "" + e);
-				}
-			}
-		}, null);
+				}, null);
 	}
 
 	@SuppressWarnings("deprecation")
-	public void checkForAuthToken() {
+	public void grabAuthToken() {
+		if (selectedAccount == null)
+			return;
 		boolean dontNotifyAuthFailure = false;
-		getAccountManager().getAuthToken(selectedAccount, ACCOUNT_TYPE, dontNotifyAuthFailure, new AccountManagerCallback<Bundle>() {
-			@Override
-			public void run(AccountManagerFuture<Bundle> future) {
-				try {
-					Bundle result = future.getResult();
-					if (result != null) {
-						getApp().token = result.getString(android.accounts.AccountManager.KEY_AUTHTOKEN);
-						if (getApp().token != null) {
-							main.onLoggedIn();
+		getAccountManager().getAuthToken(selectedAccount, ACCOUNT_TYPE, dontNotifyAuthFailure,
+				new AccountManagerCallback<Bundle>() {
+					@Override
+					public void run(AccountManagerFuture<Bundle> future) {
+						try {
+							Bundle result = future.getResult();
+							if (result != null) {
+								getApp().token = result.getString(android.accounts.AccountManager.KEY_AUTHTOKEN);
+							}
+							if (getApp().token == null) {
+								AlertDialog dialog = dialogs.getWaitingForPermission();
+								ensureVisible(dialog);
+								Intent intent = result.getParcelable(AccountManager.KEY_INTENT);
+								if (intent != null) {
+									main.startActivityForResult(intent, MainActivity.ACCESS_REQUEST);
+								} else {
+									main.finish();
+								}
+							}
+						} catch (OperationCanceledException | AuthenticatorException | IOException e) {
+							Log.wtf("AUTH", "" + e);
 						}
 					}
-				} catch (OperationCanceledException | AuthenticatorException | IOException e) {
-					Log.wtf("AUTH", "" + e);
-				}
-			}
-		}, null);
+				}, null);
 	}
 
 	protected Account getRememberedAccount(Account[] accounts, String accountName) {

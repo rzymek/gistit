@@ -1,4 +1,4 @@
-package org.gistit;
+package org.gistit.auth;
 
 import android.content.Intent;
 
