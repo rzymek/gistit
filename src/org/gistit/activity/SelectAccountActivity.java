@@ -2,7 +2,7 @@ package org.gistit.activity;
 
 import org.gistit.App;
 import org.gistit.activity.base.ListSelectionActivity;
-import org.gistit.util.SPair;
+import org.gistit.util.StrPair;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -28,7 +28,7 @@ public class SelectAccountActivity extends ListSelectionActivity<Account> implem
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 		Account account = adapter.getItem(position);
-		setResult(SPair.mk(App.ACCOUNT_NAME, account.name));
+		setResult(StrPair.make(App.ACCOUNT_NAME, account.name));
 	}
 }
  

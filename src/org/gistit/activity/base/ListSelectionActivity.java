@@ -3,7 +3,7 @@ package org.gistit.activity.base;
 import org.gistit.App;
 import org.gistit.R;
 import org.gistit.rest.RESTCallback;
-import org.gistit.util.SPair;
+import org.gistit.util.StrPair;
 
 import retrofit.RetrofitError;
 import android.app.ListActivity;
@@ -66,7 +66,7 @@ public abstract class ListSelectionActivity<T> extends ListActivity implements O
 
 	protected abstract void init();
 
-	protected void setResult(SPair... data) {
+	protected void setResult(StrPair... data) {
 		SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
 		Editor edit = shared.edit();
 		for (Pair<String, String> pair : data) {
