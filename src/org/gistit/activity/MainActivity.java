@@ -2,6 +2,7 @@ package org.gistit.activity;
 
 import org.gistit.App;
 import org.gistit.R;
+import org.gistit.ex.RESTException;
 import org.gistit.model.Gist;
 
 import android.content.Intent;
@@ -48,8 +49,8 @@ public class MainActivity extends ActionBarActivity {
 	private void maybyProcessIntent() {
 		String msg = app().msg;
 		if (msg != null) {
-			updateGistAsync(msg);
 			newText.setText(msg);
+			updateGistAsync(msg);
 		}
 	}
 
@@ -63,9 +64,9 @@ public class MainActivity extends ActionBarActivity {
 				if (TextUtils.isEmpty(subject))
 					app().msg = message;
 				else
-					app().msg =  "[" + subject + "](" + message + ")";
+					app().msg = "[" + subject + "](" + message + ")";
 			}
-		}		
+		}
 	}
 
 	@Override
@@ -98,7 +99,7 @@ public class MainActivity extends ActionBarActivity {
 			finish();
 			return true;
 		} else if (id == R.id.action_select_gist) {
-			startActivityForResult(new Intent(this, PickGistActivity.class), PICK_GIST);
+			showGistPicker();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -106,8 +107,11 @@ public class MainActivity extends ActionBarActivity {
 
 	private void updateGistAsync(String text) {
 		new AsyncTask<String, String, String>() {
+			private RESTException lastError;
+
 			@Override
 			protected void onPreExecute() {
+				lastError = null;
 				progressBar.setVisibility(View.VISIBLE);
 				newText.setEnabled(false);
 				newText.setFocusable(false);
@@ -115,16 +119,21 @@ public class MainActivity extends ActionBarActivity {
 
 			@Override
 			protected String doInBackground(String... params) {
-				App app = app();
-				Gist gist = app.github.getGist(app().gistId);
-				String content = gist.getContent();
-				if (PickGistActivity.EMPTY_GIST_HACK.equals(content))
-					content = "";
-				String append = params[0];
-				gist.getDefaultFile().content = append + "  \n" + content;
-				publishProgress(gist.getDefaultFile().content);
-				app.github.update(app().gistId, gist);
-				return append;
+				try {
+					App app = app();
+					Gist gist = app.github.getGist(app().gistId);
+					String content = gist.getContent();
+					if (PickGistActivity.EMPTY_GIST_HACK.equals(content))
+						content = "";
+					String append = params[0];
+					gist.getDefaultFile().content = append + "  \n" + content;
+					publishProgress(gist.getDefaultFile().content);
+					app.github.update(app().gistId, gist);
+					return append;
+				} catch (RESTException ex) {
+					lastError = ex;
+					return null;
+				}
 			}
 
 			@Override
@@ -134,11 +143,28 @@ public class MainActivity extends ActionBarActivity {
 
 			@Override
 			protected void onPostExecute(String result) {
-				Toast.makeText(MainActivity.this, "Gist updated", Toast.LENGTH_SHORT).show();
+				if (lastError != null) {
+					if(lastError.status == 404) {
+						toast("Previously selected Gist not found. ");
+						showGistPicker();
+						return;
+					}
+					toast("Error: "+lastError);
+					return;
+				}
+				toast("Gist updated");
 				app().msg = null;
 				finish();
 			};
 		}.execute(text);
+	}
+
+	protected void showGistPicker() {
+		startActivityForResult(new Intent(this, PickGistActivity.class), PICK_GIST);
+	}
+
+	protected void toast(String msg) {
+		Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
 	}
 
 }

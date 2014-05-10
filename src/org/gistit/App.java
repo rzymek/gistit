@@ -1,5 +1,6 @@
 package org.gistit;
 
+import org.gistit.ex.RESTException;
 import org.gistit.rest.GitHubService;
 
 import retrofit.ErrorHandler;
@@ -11,7 +12,6 @@ import retrofit.client.Client;
 import android.app.Application;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 public class App extends Application {
 	public GitHubService github;
@@ -26,19 +26,26 @@ public class App extends Application {
 		super.onCreate();
 
 		Client client = new AndroidApacheClient();
-		RestAdapter restAdapter = new RestAdapter.Builder().setEndpoint("https://api.github.com").setRequestInterceptor(new RequestInterceptor() {
-			@Override
-			public void intercept(RequestFacade request) {
-				if (token != null)
-					request.addHeader("Authorization", "token " + token);
-			}
-		}).setErrorHandler(new ErrorHandler() {
-			@Override
-			public Throwable handleError(RetrofitError error) {
-				Log.e("RETROFIT", error + "\n" + error.getMessage()+"\n"+error.getCause()+"\n"+error.getResponse().getReason());
-				return error.getCause();
-			}
-		}).setClient(client).build();
+		RestAdapter restAdapter = new RestAdapter.Builder()
+			.setEndpoint("https://api.github.com")
+			.setRequestInterceptor(new RequestInterceptor() {
+				@Override
+				public void intercept(RequestFacade request) {
+					if (token != null)
+						request.addHeader("Authorization", "token " + token);
+				}
+			})
+			.setErrorHandler(new ErrorHandler() {
+				@Override
+				public Throwable handleError(RetrofitError error) {
+					if(error.getCause() != null) {
+						return error.getCause();			 			
+					}
+					return new RESTException(error.getResponse());
+				}
+			})
+			.setClient(client)
+			.build();
 
 		github = restAdapter.create(GitHubService.class);
 		loadPickedGist();
