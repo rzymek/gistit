@@ -1,15 +1,16 @@
-package org.gistit.auth.setup;
+package org.gistit.auth;
 
 import org.gistit.App;
 import org.gistit.activity.SelectAccountActivity;
 import org.gistit.activity.SetupChecklistActivity;
+import org.gistit.auth.activity.SetupItem;
 
 import android.accounts.Account;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 

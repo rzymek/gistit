@@ -3,9 +3,9 @@ package org.gistit.model;
 import java.util.Collection;
 import java.util.Map;
 
-import com.google.gson.annotations.SerializedName;
-
 import android.text.TextUtils;
+
+import com.google.gson.annotations.SerializedName;
 
 public class Gist {
 	public String id;

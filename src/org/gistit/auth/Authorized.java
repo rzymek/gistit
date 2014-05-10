@@ -1,9 +1,10 @@
-package org.gistit.auth.setup;
+package org.gistit.auth;
 
 import java.io.IOException;
 
 import org.gistit.activity.MainActivity;
 import org.gistit.activity.SetupChecklistActivity;
+import org.gistit.auth.activity.SetupItem;
 
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;

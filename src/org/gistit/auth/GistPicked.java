@@ -1,8 +1,9 @@
-package org.gistit.auth.setup;
+package org.gistit.auth;
 
 import org.gistit.App;
 import org.gistit.activity.PickGistActivity;
 import org.gistit.activity.SetupChecklistActivity;
+import org.gistit.auth.activity.SetupItem;
 
 import android.content.Intent;
 

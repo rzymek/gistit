@@ -2,10 +2,10 @@ package org.gistit.activity;
 
 import org.gistit.App;
 import org.gistit.R;
-import org.gistit.auth.setup.Authorized;
-import org.gistit.auth.setup.GistPicked;
-import org.gistit.auth.setup.GitHubAccountSelected;
-import org.gistit.auth.setup.SetupItem;
+import org.gistit.auth.Authorized;
+import org.gistit.auth.GistPicked;
+import org.gistit.auth.GitHubAccountSelected;
+import org.gistit.auth.activity.SetupItem;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
