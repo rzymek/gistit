@@ -3,7 +3,7 @@ package org.gistit.auth;
 import org.gistit.App;
 import org.gistit.activity.SelectAccountActivity;
 import org.gistit.activity.SetupChecklistActivity;
-import org.gistit.auth.activity.SetupItem;
+import org.gistit.auth.base.SetupItem;
 
 import android.accounts.Account;
 import android.app.AlertDialog;

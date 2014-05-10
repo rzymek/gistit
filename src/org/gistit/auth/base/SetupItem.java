@@ -1,4 +1,4 @@
-package org.gistit.auth.activity;
+package org.gistit.auth.base;
 
 import org.gistit.App;
 import org.gistit.activity.SetupChecklistActivity;

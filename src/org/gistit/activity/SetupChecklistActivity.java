@@ -5,7 +5,7 @@ import org.gistit.R;
 import org.gistit.auth.Authorized;
 import org.gistit.auth.GistPicked;
 import org.gistit.auth.GitHubAccountSelected;
-import org.gistit.auth.activity.SetupItem;
+import org.gistit.auth.base.SetupItem;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
