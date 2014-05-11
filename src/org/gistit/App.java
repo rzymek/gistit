@@ -17,7 +17,7 @@ public class App extends Application {
 	public GitHubService github;
 	public String token;
 	public String gistId;
-	public String gistName;
+	public String gistName = "GistId";
 	public String msg;
 	public static final String ACCOUNT_NAME = "account.name";
 
@@ -57,7 +57,4 @@ public class App extends Application {
 		gistName = shared.getString("gist.name", "GistIt");
 	}
 
-	public boolean isConfigured() {
-		return token != null && gistId != null;
-	}
 }

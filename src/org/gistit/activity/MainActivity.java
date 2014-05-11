@@ -2,6 +2,8 @@ package org.gistit.activity;
 
 import org.gistit.App;
 import org.gistit.R;
+import org.gistit.auth.ResultAdapter;
+import org.gistit.auth.SetupRunner;
 import org.gistit.ex.RESTException;
 import org.gistit.model.Gist;
 
@@ -29,16 +31,23 @@ public class MainActivity extends ActionBarActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		saveSharedMessage();
-		if (!app().isConfigured()) {
-			startActivity(new Intent(this, SetupChecklistActivity.class));
-			finish();
-			return;
-		}
+		final MainActivity self = this;
 		setContentView(R.layout.activity_gist_it);
 		newText = (TextView) findViewById(R.id.newText);
 		progressBar = (ProgressBar) findViewById(R.id.progressBar);
-		setTitle(app().gistName);
-		maybyProcessIntent();
+		new SetupRunner(app()).run(new ResultAdapter(){
+			@Override
+			public void passed() {
+				setEnabled(true);
+				setTitle(app().gistName);
+				maybyProcessIntent();				
+			}
+			@Override
+			public void failed() {
+				startActivity(new Intent(self, SetupChecklistActivity.class));
+				finish();
+			}
+		});
 
 	}
 
@@ -113,8 +122,7 @@ public class MainActivity extends ActionBarActivity {
 			protected void onPreExecute() {
 				lastError = null;
 				progressBar.setVisibility(View.VISIBLE);
-				newText.setEnabled(false);
-				newText.setFocusable(false);
+				setEnabled(false);
 			};
 
 			@Override
@@ -165,6 +173,11 @@ public class MainActivity extends ActionBarActivity {
 
 	protected void toast(String msg) {
 		Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
+	}
+
+	protected void setEnabled(boolean enabled) {
+		newText.setEnabled(enabled);
+		newText.setFocusable(enabled);
 	}
 
 }

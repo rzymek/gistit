@@ -2,10 +2,10 @@ package org.gistit.activity;
 
 import org.gistit.App;
 import org.gistit.R;
-import org.gistit.auth.Authorized;
-import org.gistit.auth.GistPicked;
-import org.gistit.auth.GitHubAccountSelected;
-import org.gistit.auth.base.SetupItem;
+import org.gistit.auth.ResultCallback;
+import org.gistit.auth.SetupItem;
+import org.gistit.auth.SetupRunner;
+import org.gistit.auth.step.UIAction;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -18,22 +18,17 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class SetupChecklistActivity extends ListActivity {
+public class SetupChecklistActivity extends ListActivity implements ResultCallback {
 	public final static String ACCOUNT_TYPE = "com.github";
 	public final static int ACCOUNT_SELECTED = 1;
 
-	public Account selectedAccount;
-
-	private SetupItem[] items = {
-			new GitHubAccountSelected(this, "GitHub account selected"),
-			new Authorized(this, "Authorized"),
-			new GistPicked(this, "Gist picked")
-	};
 	private ArrayAdapter<SetupItem> adapter;
+	private SetupRunner runner;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		runner = new SetupRunner((App) getApplication());
 		adapter = new ArrayAdapter<SetupItem>(this, R.layout.setup_checklist_item, R.id.setup_item_text) {
 			@Override
 			public View getView(int position, View convertView, ViewGroup parent) {
@@ -44,10 +39,11 @@ public class SetupChecklistActivity extends ListActivity {
 				return view;
 			}
 		};
-		for (SetupItem item : items) {
+		for (SetupItem item : runner.items) {
 			adapter.add(item);
 		}
 		setListAdapter(adapter);
+		setTitle("GistIt setup");
 
 	}
 
@@ -58,19 +54,13 @@ public class SetupChecklistActivity extends ListActivity {
 			return;
 		if(requestCode == ACCOUNT_SELECTED) {
 			Account[] accounts = AccountManager.get(this).getAccounts();
-			selectedAccount = findByName(accounts, data.getStringExtra(App.ACCOUNT_NAME));
+			runner.selectedAccount = findByName(accounts, data.getStringExtra(App.ACCOUNT_NAME));
 		}
 	}
 	@Override
 	public void onResume() {
 		super.onResume();
-		adapter.notifyDataSetChanged();
-		for (SetupItem item : items) {
-			if (!item.execute())
-				return;
-		}
-		finish();
-		startActivity(new Intent(this, MainActivity.class));
+		runner.run(this);
 	}
 
 	public static Account findByName(Account[] accounts, String accountName) {
@@ -89,7 +79,24 @@ public class SetupChecklistActivity extends ListActivity {
 		super.onListItemClick(l, v, position, id);
 		SetupItem item = adapter.getItem(position);
 		item.reset();
-		onResume();
+		runner.run(this);
+	}
+
+	@Override
+	public void failed() {
+		adapter.notifyDataSetChanged();
+	}
+
+	@Override
+	public void passed() {		
+		adapter.notifyDataSetChanged();
+		finish();
+		startActivity(new Intent(this, MainActivity.class));
+	}
+
+	@Override
+	public void uiAction(UIAction action) {
+		action.run(this);
 	}
 
 }

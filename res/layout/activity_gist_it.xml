@@ -11,6 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="top"
+        android:enabled="false"
         android:hint="Enter text to append to gist"
         android:inputType="textMultiLine" >
         <requestFocus/>
@@ -23,6 +24,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:indeterminate="true"
-        android:visibility="gone" />
+        android:visibility="visible" />
 
 </FrameLayout>
