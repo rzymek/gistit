@@ -35,6 +35,7 @@ public class MainActivity extends ActionBarActivity {
 		setContentView(R.layout.activity_gist_it);
 		newText = (TextView) findViewById(R.id.newText);
 		progressBar = (ProgressBar) findViewById(R.id.progressBar);
+		setEnabled(true);
 		app().setupRunner.run(new ResultCallback() {
 			@Override
 			public void passed() {
@@ -126,7 +127,6 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			protected void onPreExecute() {
 				lastError = null;
-				progressBar.setVisibility(View.VISIBLE);
 				setEnabled(false);
 			};
 
@@ -183,6 +183,7 @@ public class MainActivity extends ActionBarActivity {
 	protected void setEnabled(boolean enabled) {
 		newText.setEnabled(enabled);
 		newText.setFocusable(enabled);
+		progressBar.setVisibility(enabled ? View.GONE : View.VISIBLE);
 	}
 
 }
