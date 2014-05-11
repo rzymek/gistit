@@ -1,4 +1,4 @@
-package org.gistit.auth.step;
+package org.gistit.auth;
 
 import android.app.Activity;
 

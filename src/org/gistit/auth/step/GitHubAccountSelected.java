@@ -5,6 +5,7 @@ import org.gistit.activity.SelectAccountActivity;
 import org.gistit.activity.SetupChecklistActivity;
 import org.gistit.auth.ResultCallback;
 import org.gistit.auth.SetupItem;
+import org.gistit.auth.UIAction;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;

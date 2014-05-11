@@ -5,7 +5,7 @@ import org.gistit.R;
 import org.gistit.auth.ResultCallback;
 import org.gistit.auth.SetupItem;
 import org.gistit.auth.SetupRunner;
-import org.gistit.auth.step.UIAction;
+import org.gistit.auth.UIAction;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -28,7 +28,7 @@ public class SetupChecklistActivity extends ListActivity implements ResultCallba
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		runner = new SetupRunner((App) getApplication());
+		runner = app().setupRunner;
 		adapter = new ArrayAdapter<SetupItem>(this, R.layout.setup_checklist_item, R.id.setup_item_text) {
 			@Override
 			public View getView(int position, View convertView, ViewGroup parent) {
@@ -45,6 +45,10 @@ public class SetupChecklistActivity extends ListActivity implements ResultCallba
 		setListAdapter(adapter);
 		setTitle("GistIt setup");
 
+	}
+
+	private App app() {
+		return (App) getApplication();
 	}
 
 	@Override

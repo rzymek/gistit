@@ -1,6 +1,5 @@
 package org.gistit.auth;
 
-import org.gistit.auth.step.UIAction;
 
 public interface ResultCallback {
 

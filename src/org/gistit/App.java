@@ -1,5 +1,6 @@
 package org.gistit;
 
+import org.gistit.auth.SetupRunner;
 import org.gistit.ex.RESTException;
 import org.gistit.rest.GitHubService;
 
@@ -20,6 +21,7 @@ public class App extends Application {
 	public String gistName = "GistId";
 	public String msg;
 	public static final String ACCOUNT_NAME = "account.name";
+	public SetupRunner setupRunner = new SetupRunner(this);
 
 	@Override
 	public void onCreate() {

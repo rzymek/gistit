@@ -2,8 +2,8 @@ package org.gistit.activity;
 
 import org.gistit.App;
 import org.gistit.R;
-import org.gistit.auth.ResultAdapter;
-import org.gistit.auth.SetupRunner;
+import org.gistit.auth.ResultCallback;
+import org.gistit.auth.UIAction;
 import org.gistit.ex.RESTException;
 import org.gistit.model.Gist;
 
@@ -35,17 +35,23 @@ public class MainActivity extends ActionBarActivity {
 		setContentView(R.layout.activity_gist_it);
 		newText = (TextView) findViewById(R.id.newText);
 		progressBar = (ProgressBar) findViewById(R.id.progressBar);
-		new SetupRunner(app()).run(new ResultAdapter(){
+		app().setupRunner.run(new ResultCallback() {
 			@Override
 			public void passed() {
 				setEnabled(true);
 				setTitle(app().gistName);
-				maybyProcessIntent();				
+				maybyProcessIntent();
 			}
+
 			@Override
 			public void failed() {
-				startActivity(new Intent(self, SetupChecklistActivity.class));
+			}
+
+			@Override
+			public void uiAction(UIAction action) {
 				finish();
+				startActivity(new Intent(self, SetupChecklistActivity.class));
+				action.run(self);
 			}
 		});
 
@@ -152,12 +158,12 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			protected void onPostExecute(String result) {
 				if (lastError != null) {
-					if(lastError.status == 404) {
+					if (lastError.status == 404) {
 						toast("Previously selected Gist not found. ");
 						showGistPicker();
 						return;
 					}
-					toast("Error: "+lastError);
+					toast("Error: " + lastError);
 					return;
 				}
 				toast("Gist updated");

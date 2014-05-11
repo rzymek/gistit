@@ -4,6 +4,7 @@ import org.gistit.App;
 import org.gistit.activity.PickGistActivity;
 import org.gistit.auth.ResultCallback;
 import org.gistit.auth.SetupItem;
+import org.gistit.auth.UIAction;
 
 import android.app.Activity;
 import android.content.Intent;

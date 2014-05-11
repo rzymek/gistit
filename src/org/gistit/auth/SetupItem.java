@@ -1,7 +1,5 @@
 package org.gistit.auth;
 
-import org.gistit.auth.step.UIAction;
-
 import android.app.Activity;
 
 public abstract class SetupItem {

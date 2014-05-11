@@ -4,7 +4,6 @@ import org.gistit.App;
 import org.gistit.auth.step.Authorized;
 import org.gistit.auth.step.GistPicked;
 import org.gistit.auth.step.GitHubAccountSelected;
-import org.gistit.auth.step.UIAction;
 
 import android.accounts.Account;
 
