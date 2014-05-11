@@ -51,7 +51,6 @@ public class MainActivity extends ActionBarActivity {
 			public void uiAction(UIAction action) {
 				finish();
 				startActivity(new Intent(self, SetupChecklistActivity.class));
-				action.run(self);
 			}
 		});
 
