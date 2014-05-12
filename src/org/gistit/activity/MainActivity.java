@@ -50,7 +50,8 @@ public class MainActivity extends ActionBarActivity {
 
 			@Override
 			public void uiAction(UIAction action) {
-				finish();
+				app().setupRunner.reset();
+				finish();				
 				startActivity(new Intent(self, SetupChecklistActivity.class));
 			}
 		});

@@ -63,4 +63,10 @@ public class SetupRunner implements ResultCallback {
 		listener.uiAction(action);
 	}
 
+	public void reset() {
+		for (SetupItem item: items) {
+			item.reset();
+		}
+	}
+
 }
